@@ -944,6 +944,26 @@ let rounds = [];
 let _rid   = 0;
 function rid() { return 'r' + (++_rid); }
 
+const STORAGE_KEY = 'ezygolfer_recovery_rounds';
+
+function saveRounds() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds)); } catch(e) {}
+}
+
+function loadRounds() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      rounds = JSON.parse(saved);
+      // Restore _rid to avoid id collisions
+      rounds.forEach(r => {
+        const n = parseInt(r.id.replace('r', ''), 10);
+        if (n > _rid) _rid = n;
+      });
+    }
+  } catch(e) { rounds = []; }
+}
+
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
@@ -954,11 +974,13 @@ function generateUUID() {
 function addRound() {
   const today = new Date().toISOString().split('T')[0];
   rounds.push({ id: rid(), date: today, courseName: 'Lombok Kosaido', playerName: '', scores: Array(18).fill('') });
+  saveRounds();
   renderRounds();
 }
 
 function removeRound(id) {
   rounds = rounds.filter(r => r.id !== id);
+  saveRounds();
   renderRounds();
 }
 
@@ -966,6 +988,7 @@ function setRoundMeta(id, field, value) {
   const r = rounds.find(r => r.id === id);
   if (!r) return;
   r[field] = value;
+  saveRounds();
   const el = document.getElementById('rhdr_' + id);
   if (el) el.textContent = roundLabel(r);
 }
@@ -974,6 +997,7 @@ function onRoundCourseChange(id, key) {
   const r = rounds.find(r => r.id === id);
   if (!r) return;
   r.courseName = key === 'Lombok Kosaido' ? 'Lombok Kosaido' : '';
+  saveRounds();
   renderRounds();
 }
 
@@ -989,6 +1013,7 @@ function setRoundScore2(id, holeIdx, value) {
   sc('rf9_'  + id, hasF9         ? f9      : '');
   sc('rb9_'  + id, hasB9         ? b9      : '');
   sc('rtot_' + id, hasF9||hasB9  ? f9 + b9 : '');
+  saveRounds();
 }
 
 function roundLabel(r) {
@@ -1126,6 +1151,8 @@ function showRecoveryMsg(msg, isError) {
 // ─── Boot ────────────────────────────────────────────────────────────────────
 
 init();
+loadRounds();
+renderRounds();
 </script>
 </body>
 </html>
