@@ -317,6 +317,22 @@
     color: var(--muted);
     margin-top: 8px;
   }
+
+  /* ── EzyGolfer multi-round recovery ── */
+  .round-card { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+  .round-card-header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--green-pale); border-bottom: 1px solid var(--border); }
+  .round-num { font-weight: 700; color: var(--green); font-size: 0.9rem; flex-shrink: 0; }
+  .round-card-body { padding: 14px; }
+  .round-meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .round-meta-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
+  .round-meta-group label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  .round-meta-group input, .round-meta-group select { padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.88rem; color: var(--text); background: #fff; }
+  .score-grid { overflow-x: auto; }
+  .score-grid table { min-width: 600px; font-size: 0.84rem; }
+  .score-grid table thead th { background: var(--green); color: #fff; padding: 5px 3px; font-size: 0.76rem; }
+  .score-grid table input { width: 30px; text-align: center; border: none; background: transparent; font-size: 0.85rem; font-weight: 500; padding: 4px 1px; -moz-appearance: textfield; }
+  .score-grid table input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .score-grid table input:focus { background: var(--green-light); outline: 1px solid var(--green-mid); border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -398,6 +414,25 @@
       <strong>.csv</strong> &mdash; raw import file for <code>import_round_csv.py</code> (Stableford app).
     </p>
     <div id="exportMsg" class="export-msg"></div>
+  </div>
+
+  <!-- EzyGolfer Multi-Round Recovery -->
+  <div class="card" style="border-top:3px solid var(--green)">
+    <div class="card-header">
+      <h2>EzyGolfer Recovery &mdash; Multiple Rounds</h2>
+      <button class="btn btn-primary" onclick="addRound()">+ Add Round</button>
+    </div>
+    <p class="note" style="margin-bottom:14px">
+      Enter multiple single-player rounds and export as an EzyGolfer backup JSON.
+      Import via <strong>Settings &rarr; Import Backup</strong> in EzyGolfer.
+      The course must already exist in EzyGolfer. Putts / FIR / GIR / penalties will all be zero &mdash; strokes only.
+    </p>
+    <div id="noRoundsMsg" style="color:var(--muted);padding:8px 0 4px;font-size:0.88rem">No rounds added yet. Click "+ Add Round" to begin.</div>
+    <div id="roundList"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-primary btn-lg" onclick="exportEzyGolferJSON()">Export EzyGolfer Backup (.json)</button>
+    </div>
+    <div id="recoveryMsg" class="export-msg"></div>
   </div>
 
 </div>
@@ -901,6 +936,191 @@ function escHtml(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ─── Multi-Round Recovery (EzyGolfer) ────────────────────────────────────────
+
+let rounds = [];
+let _rid   = 0;
+function rid() { return 'r' + (++_rid); }
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+function addRound() {
+  const today = new Date().toISOString().split('T')[0];
+  rounds.push({ id: rid(), date: today, courseName: 'Lombok Kosaido', playerName: '', scores: Array(18).fill('') });
+  renderRounds();
+}
+
+function removeRound(id) {
+  rounds = rounds.filter(r => r.id !== id);
+  renderRounds();
+}
+
+function setRoundMeta(id, field, value) {
+  const r = rounds.find(r => r.id === id);
+  if (!r) return;
+  r[field] = value;
+  const el = document.getElementById('rhdr_' + id);
+  if (el) el.textContent = roundLabel(r);
+}
+
+function onRoundCourseChange(id, key) {
+  const r = rounds.find(r => r.id === id);
+  if (!r) return;
+  r.courseName = key === 'Lombok Kosaido' ? 'Lombok Kosaido' : '';
+  renderRounds();
+}
+
+function setRoundScore2(id, holeIdx, value) {
+  const r = rounds.find(r => r.id === id);
+  if (!r) return;
+  r.scores[holeIdx] = value;
+  const f9    = r.scores.slice(0, 9).reduce((a, b) => a + (+b || 0), 0);
+  const b9    = r.scores.slice(9).reduce((a, b) => a + (+b || 0), 0);
+  const hasF9 = r.scores.slice(0, 9).some(s => s !== '');
+  const hasB9 = r.scores.slice(9).some(s => s !== '');
+  const sc    = (eid, v) => { const e = document.getElementById(eid); if (e) e.textContent = v; };
+  sc('rf9_'  + id, hasF9         ? f9      : '');
+  sc('rb9_'  + id, hasB9         ? b9      : '');
+  sc('rtot_' + id, hasF9||hasB9  ? f9 + b9 : '');
+}
+
+function roundLabel(r) {
+  return `${r.date || '(no date)'}  —  ${r.playerName || '(player)'}  —  ${r.courseName || '(course)'}`;
+}
+
+function renderRounds() {
+  document.getElementById('noRoundsMsg').style.display = rounds.length ? 'none' : '';
+  const lk = COURSES['Lombok Kosaido'];
+  document.getElementById('roundList').innerHTML = rounds.map((r, idx) => {
+    const isLK  = r.courseName === 'Lombok Kosaido';
+    const par   = isLK ? lk.par : null;
+    const f9Par = par ? par.slice(0, 9).reduce((a, b) => a + b, 0) : '';
+    const b9Par = par ? par.slice(9).reduce((a, b) => a + b, 0) : '';
+    const f9    = r.scores.slice(0, 9).reduce((a, b) => a + (+b || 0), 0);
+    const b9    = r.scores.slice(9).reduce((a, b) => a + (+b || 0), 0);
+    const hasF9 = r.scores.slice(0, 9).some(s => s !== '');
+    const hasB9 = r.scores.slice(9).some(s => s !== '');
+    return `
+    <div class="round-card">
+      <div class="round-card-header">
+        <span class="round-num">#${idx + 1}</span>
+        <span id="rhdr_${r.id}" style="flex:1;font-size:0.88rem">${escHtml(roundLabel(r))}</span>
+        <button class="btn btn-danger" onclick="removeRound('${r.id}')" title="Remove">&#x2715;</button>
+      </div>
+      <div class="round-card-body">
+        <div class="round-meta-row">
+          <div class="round-meta-group">
+            <label>Date</label>
+            <input type="date" value="${escHtml(r.date)}"
+              oninput="setRoundMeta('${r.id}','date',this.value)">
+          </div>
+          <div class="round-meta-group">
+            <label>Course</label>
+            <select onchange="onRoundCourseChange('${r.id}',this.value)">
+              <option value="Lombok Kosaido"${isLK ? ' selected' : ''}>Lombok Kosaido</option>
+              <option value="Other"${!isLK ? ' selected' : ''}>Other (enter below)</option>
+            </select>
+          </div>
+          ${!isLK ? `
+          <div class="round-meta-group">
+            <label>Course Name</label>
+            <input type="text" value="${escHtml(r.courseName)}" placeholder="Exact name in EzyGolfer"
+              oninput="setRoundMeta('${r.id}','courseName',this.value)">
+          </div>` : ''}
+          <div class="round-meta-group">
+            <label>Player Name</label>
+            <input type="text" value="${escHtml(r.playerName)}" placeholder="e.g. David"
+              oninput="setRoundMeta('${r.id}','playerName',this.value)">
+          </div>
+        </div>
+        <div class="score-grid">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:5px 8px;min-width:58px"></th>
+                ${Array.from({length: 18}, (_, i) =>
+                  `<th style="min-width:30px${i === 9 ? ';border-left:2.5px solid #7bc47a' : ''}">${i + 1}</th>`
+                ).join('')}
+                <th>F9</th><th>B9</th><th>TOT</th>
+              </tr>
+              ${par ? `
+              <tr class="par-row">
+                <td style="text-align:left;padding:3px 8px;font-weight:600">PAR</td>
+                ${par.map((p, i) =>
+                  `<td style="text-align:center${i === 9 ? ';border-left:2.5px solid #7bc47a' : ''}">${p}</td>`
+                ).join('')}
+                <td style="text-align:center;font-weight:700">${f9Par}</td>
+                <td style="text-align:center;font-weight:700">${b9Par}</td>
+                <td style="text-align:center;font-weight:700">${f9Par + b9Par}</td>
+              </tr>` : ''}
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align:left;padding:3px 8px;font-weight:600">Score</td>
+                ${r.scores.map((s, i) => `
+                  <td style="border:1px solid var(--border);padding:0${i === 9 ? ';border-left:2.5px solid #4a8c42' : ''}">
+                    <input type="number" min="0" max="15" value="${s}"
+                      oninput="setRoundScore2('${r.id}',${i},this.value===''?'':+this.value)">
+                  </td>`).join('')}
+                <td id="rf9_${r.id}"  style="text-align:center;font-weight:700;background:#f0f8ee;color:var(--green)">${hasF9 ? f9 : ''}</td>
+                <td id="rb9_${r.id}"  style="text-align:center;font-weight:700;background:#f0f8ee;color:var(--green)">${hasB9 ? b9 : ''}</td>
+                <td id="rtot_${r.id}" style="text-align:center;font-weight:700;background:#f0f8ee;color:var(--green)">${hasF9||hasB9 ? f9+b9 : ''}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportEzyGolferJSON() {
+  if (rounds.length === 0) {
+    showRecoveryMsg('No rounds to export — add at least one round first.', true);
+    return;
+  }
+  const data = {
+    courses: [],
+    rounds: rounds.map(r => {
+      const dateStr = r.date
+        ? new Date(r.date + 'T08:00:00.000Z').toISOString()
+        : new Date().toISOString();
+      return {
+        id:           generateUUID(),
+        courseName:   r.courseName || 'Lombok Kosaido',
+        teeName:      'White',
+        date:         dateStr,
+        isComplete:   true,
+        totalScore:   r.scores.reduce((a, b) => a + (+b || 0), 0),
+        scoreEntries: r.scores.map((s, i) => ({
+          holeNumber: i + 1,
+          strokes:    +s || 0,
+          putts:      0,
+          fir:        false,
+          gir:        false,
+          penalties:  0
+        }))
+      };
+    })
+  };
+  const filename = `EzyGolfer-recovery-${new Date().toISOString().split('T')[0]}.json`;
+  downloadFile(filename, JSON.stringify(data, null, 2), 'application/json');
+  showRecoveryMsg(`Exported ${rounds.length} round${rounds.length === 1 ? '' : 's'} \u2192 ${filename}`);
+}
+
+function showRecoveryMsg(msg, isError) {
+  const el = document.getElementById('recoveryMsg');
+  if (!el) return;
+  el.style.color = isError ? 'var(--red)' : 'var(--green-mid)';
+  el.textContent = (isError ? '\u26a0 ' : '\u2713 ') + msg;
+  setTimeout(() => { el.textContent = ''; }, 5000);
 }
 
 // ─── Boot ────────────────────────────────────────────────────────────────────
