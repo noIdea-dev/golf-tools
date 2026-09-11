@@ -420,7 +420,6 @@
   <div class="card" style="border-top:3px solid var(--green)">
     <div class="card-header">
       <h2>EzyGolfer Recovery &mdash; Multiple Rounds</h2>
-      <button class="btn btn-primary" onclick="addRound()">+ Add Round</button>
     </div>
     <p class="note" style="margin-bottom:14px">
       Enter multiple single-player rounds and export as an EzyGolfer backup JSON.
@@ -429,7 +428,8 @@
     </p>
     <div id="noRoundsMsg" style="color:var(--muted);padding:8px 0 4px;font-size:0.88rem">No rounds added yet. Click "+ Add Round" to begin.</div>
     <div id="roundList"></div>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary btn-lg" onclick="addRound()">+ Add Round</button>
       <button class="btn btn-primary btn-lg" onclick="exportEzyGolferJSON()">Export EzyGolfer Backup (.json)</button>
     </div>
     <div id="recoveryMsg" class="export-msg"></div>
