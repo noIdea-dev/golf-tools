@@ -1,0 +1,56 @@
+{
+  "id": "9556cde3-4398-40c6-91b0-b91d8ad63081",
+  "name": "LenGarry Cup 2026",
+  "courseName": "SIra Beach Lombok",
+  "slope": 122,
+  "playersPerTeam": 2,
+  "teams": [
+    {
+      "id": "310e01b3-3da4-4783-b011-ba2a11fc67f3",
+      "name": "Invincibles",
+      "players": [
+        {
+          "name": "Matt Roberts",
+          "handicap": 16
+        },
+        {
+          "name": "David Greenland",
+          "handicap": 31
+        }
+      ],
+      "totalScore": 78
+    },
+    {
+      "id": "992cd6de-332f-4ffa-bf7c-ca3f612ae415",
+      "name": "Wannabees",
+      "players": [
+        {
+          "name": "Shane Graham",
+          "handicap": 7
+        },
+        {
+          "name": "Garry Sundin",
+          "handicap": 14
+        }
+      ],
+      "totalScore": 76
+    },
+    {
+      "id": "619380b3-1fa0-45ac-9ce5-bb593d8cd9b2",
+      "name": "",
+      "players": [
+        {
+          "name": "Shawn",
+          "handicap": 18
+        },
+        {
+          "name": "DrewNoShow",
+          "handicap": 31
+        }
+      ],
+      "totalScore": 80
+    }
+  ],
+  "createdAt": "2026-06-16T01:24:19.906Z",
+  "updatedAt": "2026-06-17T05:46:54.445Z"
+}

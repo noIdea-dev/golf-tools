@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golf Team Generator</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --panel-2: #18233a;
+      --text: #e8eefc;
+      --muted: #a8b3cf;
+      --accent: #4ea1ff;
+      --accent-2: #37c27f;
+      --danger: #ff6b6b;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 16px 40px rgba(0,0,0,0.28);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #14213d 0%, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: 0.2px;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card + .card { margin-top: 18px; }
+    .card-header {
+      padding: 18px 20px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-body { padding: 20px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      outline: none;
+      font-size: 1rem;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(78,161,255,0.15);
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: var(--accent);
+    }
+    button.secondary { background: var(--panel-2); border: 1px solid var(--border); }
+    button.success { background: var(--accent-2); }
+    button.danger { background: var(--danger); }
+    button:hover { opacity: 0.95; }
+    .icon-btn {
+      padding: 6px 10px;
+      font-size: 0.88rem;
+    }
+    .player-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+    .player-table th, .player-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: left;
+    }
+    .player-table th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.92rem;
+      background: rgba(255,255,255,0.03);
+    }
+    .player-table input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+    }
+    .player-table td:last-child { width: 88px; }
+    .small-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .error {
+      color: #ffb4b4;
+      background: rgba(255,107,107,0.12);
+      border: 1px solid rgba(255,107,107,0.28);
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-top: 14px;
+      display: none;
+    }
+    .results {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .team {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .team h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.1rem;
+    }
+    .team-meta {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+    }
+    .team ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .team li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .team li:last-child { border-bottom: none; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .stat .label {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+    }
+    .stat .value {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 14px;
+    }
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: #0f172a;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      max-width: 520px;
+      width: 100%;
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .modal h2 {
+      margin: 0 0 8px 0;
+      font-size: 1.2rem;
+    }
+    .modal p {
+      margin: 6px 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .modal-close {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      padding: 6px 12px;
+      margin-top: 12px;
+      background: var(--panel-2);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    @media (max-width: 900px) {
+      .grid, .results, .summary { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .grid, .results, .summary { grid-template-columns: 1fr; }
+      .container { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>Golf Team Generator</h1>
+        <div class="subtitle">
+          Build fair Ambrose/scramble teams by spreading handicaps, choosing a balance method, and exporting results to CSV.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span>Tournament Setup</span>
+        <button class="secondary icon-btn" id="explainBalanceBtn">Explain balance methods</button>
+      </div>
+      <div class="card-body">
+        <div class="grid">
+          <div class="field">
+            <label for="teamCount">Number of teams</label>
+            <input id="teamCount" type="number" min="1" value="3" />
+          </div>
+          <div class="field">
+            <label for="playersPerTeam">Players per team</label>
+            <input id="playersPerTeam" type="number" min="1" value="4" />
+          </div>
+          <div class="field">
+            <label for="autoRows">Auto player rows</label>
+            <input id="autoRows" type="number" min="1" value="12" />
+          </div>
+          <div class="field">
+            <label for="balanceMethod">Balance method</label>
+            <select id="balanceMethod">
+              <option value="greedy">Greedy handicap balance (default)</option>
+              <option value="snake">Snake draft by handicap</option>
+              <option value="randomBalanced">Random, then rebalance</option>
+              <option value="lowCapAnchor">Anchor low caps per team</option>
+              <option value="minVariance">Minimise handicap variance</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="secondary" id="setRowsBtn">Create Player Rows</button>
+          <button class="success" id="generateBtn">Generate Teams</button>
+          <button class="secondary" id="fillExampleBtn">Fill Example Data</button>
+          <button class="secondary" id="exportCsvBtn">Export Teams to CSV</button>
+          <button class="danger" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="small-note">
+          Team handicap allowance follows common USGA scramble guidance: 4 players = 25% / 20% / 15% / 10%, 3 players = 30% / 20% / 10%, 2 players = 35% / 15%. [web:5][web:25][web:27]
+        </div>
+
+        <div id="errorBox" class="error"></div>
+
+        <table class="player-table">
+          <thead>
+            <tr>
+              <th style="width: 55%;">Player name</th>
+              <th style="width: 25%;">Handicap</th>
+              <th style="width: 20%;">Remove</th>
+            </tr>
+          </thead>
+          <tbody id="playersBody"></tbody>
+        </table>
+
+        <div class="controls">
+          <button id="addPlayerBtn">Add Player</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Results</div>
+      <div class="card-body">
+        <div class="summary" id="summary"></div>
+        <div class="results" id="results"></div>
+        <div class="footer-note" id="notes"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for balance method explanations -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <h2 id="modalTitle">Balance methods</h2>
+      <p><strong>Greedy handicap balance (default)</strong> spreads total handicap as evenly as possible across teams by always assigning the next player to the team with the current lowest total handicap.</p>
+      <p><strong>Snake draft by handicap</strong> sorts players by handicap and deals them to teams in a back-and-forth (snake) order so low, mid, and high handicaps are mixed across teams.</p>
+      <p><strong>Random, then rebalance</strong> starts with a random team draw, then nudges players between teams to reduce big differences in total handicap.</p>
+      <p><strong>Anchor low caps per team</strong> first spreads the lowest handicaps evenly as “anchors,” then fills in the rest to keep teams roughly equal.</p>
+      <p><strong>Minimise handicap variance</strong> runs several shuffled draws and picks the one with the smallest spread of total team handicaps.</p>
+      <button class="modal-close" id="modalCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const playersBody = document.getElementById('playersBody');
+    const errorBox = document.getElementById('errorBox');
+    const resultsEl = document.getElementById('results');
+    const summaryEl = document.getElementById('summary');
+    const notesEl = document.getElementById('notes');
+
+    const teamCountInput = document.getElementById('teamCount');
+    const playersPerTeamInput = document.getElementById('playersPerTeam');
+    const autoRowsInput = document.getElementById('autoRows');
+    const balanceMethodSelect = document.getElementById('balanceMethod');
+
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const explainBalanceBtn = document.getElementById('explainBalanceBtn');
+
+    let lastTeamsForExport = null;
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }
+
+    function clearError() {
+      errorBox.textContent = '';
+      errorBox.style.display = 'none';
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function createRow(name = '', handicap = '') {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" class="player-name" placeholder="Player name" value="${escapeHtml(name)}"></td>
+        <td><input type="number" class="player-hcp" step="0.1" placeholder="e.g. 12.4" value="${escapeHtml(handicap)}"></td>
+        <td><button type="button" class="secondary remove-btn">Remove</button></td>
+      `;
+      tr.querySelector('.remove-btn').addEventListener('click', () => tr.remove());
+      return tr;
+    }
+
+    function setRows(n) {
+      playersBody.innerHTML = '';
+      for (let i = 0; i < n; i++) playersBody.appendChild(createRow());
+      clearError();
+    }
+
+    function getPlayers() {
+      const rows = [...playersBody.querySelectorAll('tr')];
+      return rows.map((row, index) => {
+        const name = row.querySelector('.player-name').value.trim();
+        const handicapRaw = row.querySelector('.player-hcp').value.trim();
+        const handicap = handicapRaw === '' ? NaN : Number(handicapRaw);
+        return { name, handicap, index };
+      });
+    }
+
+    function calcAllowanceForTeam(teamPlayers) {
+      const handicaps = teamPlayers.map(p => p.handicap).sort((a, b) => a - b);
+      const n = handicaps.length;
+      if (n === 4) return handicaps[0]*0.25 + handicaps[1]*0.20 + handicaps[2]*0.15 + handicaps[3]*0.10;
+      if (n === 3) return handicaps[0]*0.30 + handicaps[1]*0.20 + handicaps[2]*0.10;
+      if (n === 2) return handicaps[0]*0.35 + handicaps[1]*0.15;
+      if (n === 1) return handicaps[0];
+      return 0;
+    }
+
+    function clonePlayers(players) {
+      return players.map(p => ({ ...p }));
+    }
+
+    function balanceGreedy(players, teamCount, playersPerTeam) {
+      const totalSlots = teamCount * playersPerTeam;
+      const usable = clonePlayers(players).slice(0, totalSlots).sort((a, b) => a.handicap - b.handicap);
+      const teams = Array.from({ length: teamCount }, (_, i) => ({
+        id: i + 1,
+        players: [],
+        rawTotal: 0
+      }));
+
+      usable.forEach(player => {
+        let targetIndex = 0;
+        let bestScore = Infinity;
+        for (let t = 0; t < teams.length; t++) {
+          if (teams[t].players.length >= playersPerTeam) continue;
+          const projected = teams[t].rawTotal + player.handicap;
+          const score = projected + teams[t].players.length * 0.01;
+          if (score < bestScore) {
+            bestScore = score;
+            targetIndex = t;
+          }
+        }
+        teams[targetIndex].players.push(player);
+        teams[targetIndex].rawTotal += player.handicap;
+      });
+
+      return { teams, unused: players.slice(totalSlots) };
+    }
+
+    function balanceSnake(players, teamCount, playersPerTeam) {
+      const totalSlots = teamCount * playersPerTeam;
+      const usable = clonePlayers(players).slice(0, totalSlots).sort((a, b) => a.handicap - b.handicap);
+      const teams = Array.from({ length: teamCount }, (_, i) => ({
+        id: i + 1,
+        players: [],
+        rawTotal: 0
+      }));
+
+      let direction = 1;
+      let idx = 0;
+      usable.forEach(player => {
+        teams[idx].players.push(player);
+        teams[idx].rawTotal += player.handicap;
+
+        if (direction === 1) {
+          if (idx === teamCount - 1) {
+            direction = -1;
+          } else {
+            idx++;
+          }
+        } else {
+          if (idx === 0) {
+            direction = 1;
+          } else {
+            idx--;
+          }
+        }
+      });
+
+      return { teams, unused: players.slice(totalSlots) };
+    }
+
+    function shuffleArray(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function balanceRandomThenRebalance(players, teamCount, playersPerTeam) {
+      const totalSlots = teamCount * playersPerTeam;
+      let usable = shuffleArray(clonePlayers(players).slice(0, totalSlots));
+      const teams = Array.from({ length: teamCount }, (_, i) => ({
+        id: i + 1,
+        players: [],
+        rawTotal: 0
+      }));
+      let idx = 0;
+      usable.forEach(player => {
+        const team = teams[idx];
+        team.players.push(player);
+        team.rawTotal += player.handicap;
+        idx = (idx + 1) % teamCount;
+      });
+
+      for (let iter = 0; iter < 200; iter++) {
+        const totals = teams.map(t => t.rawTotal);
+        const maxIndex = totals.indexOf(Math.max(...totals));
+        const minIndex = totals.indexOf(Math.min(...totals));
+        const heavy = teams[maxIndex];
+        const light = teams[minIndex];
+        if (!heavy.players.length || !light.players.length) break;
+
+        const candidates = heavy.players.slice();
+        candidates.sort((a, b) => Math.abs(a.handicap - (heavy.rawTotal / heavy.players.length)) -
+                                   Math.abs(b.handicap - (heavy.rawTotal / heavy.players.length)));
+
+        let improved = false;
+        for (const p of candidates) {
+          const newHeavyTotal = heavy.rawTotal - p.handicap;
+          const newLightTotal = light.rawTotal + p.handicap;
+          const oldSpread = Math.max(...totals) - Math.min(...totals);
+          const testTotals = totals.slice();
+          testTotals[maxIndex] = newHeavyTotal;
+          testTotals[minIndex] = newLightTotal;
+          const newSpread = Math.max(...testTotals) - Math.min(...testTotals);
+          if (newSpread < oldSpread) {
+            heavy.players = heavy.players.filter(x => x !== p);
+            heavy.rawTotal = newHeavyTotal;
+            light.players.push(p);
+            light.rawTotal = newLightTotal;
+            improved = true;
+            break;
+          }
+        }
+        if (!improved) break;
+      }
+
+      return { teams, unused: players.slice(totalSlots) };
+    }
+
+    function balanceLowCapAnchor(players, teamCount, playersPerTeam) {
+      const totalSlots = teamCount * playersPerTeam;
+      const usable = clonePlayers(players).slice(0, totalSlots);
+      usable.sort((a, b) => a.handicap - b.handicap);
+
+      const teams = Array.from({ length: teamCount }, (_, i) => ({
+        id: i + 1,
+        players: [],
+        rawTotal: 0
+      }));
+
+      usable.forEach((player, index) => {
+        if (index < teamCount) {
+          teams[index].players.push(player);
+          teams[index].rawTotal += player.handicap;
+        }
+      });
+
+      const remaining = usable.slice(teamCount);
+      remaining.sort((a, b) => b.handicap - a.handicap);
+
+      remaining.forEach(player => {
+        let targetIndex = 0;
+        let bestTotal = Infinity;
+        for (let t = 0; t < teams.length; t++) {
+          if (teams[t].players.length >= playersPerTeam) continue;
+          const projected = teams[t].rawTotal + player.handicap;
+          if (projected < bestTotal) {
+            bestTotal = projected;
+            targetIndex = t;
+          }
+        }
+        teams[targetIndex].players.push(player);
+        teams[targetIndex].rawTotal += player.handicap;
+      });
+
+      return { teams, unused: players.slice(totalSlots) };
+    }
+
+    function balanceMinVariance(players, teamCount, playersPerTeam) {
+      const totalSlots = teamCount * playersPerTeam;
+      const usable = clonePlayers(players).slice(0, totalSlots);
+      let bestTeams = null;
+      let bestSpread = Infinity;
+
+      const trials = 40;
+      for (let i = 0; i < trials; i++) {
+        const shuffled = shuffleArray(usable);
+        const teams = Array.from({ length: teamCount }, (_, idx) => ({
+          id: idx + 1,
+          players: [],
+          rawTotal: 0
+        }));
+        let idx = 0;
+        shuffled.forEach(player => {
+          const team = teams[idx];
+          team.players.push(player);
+          team.rawTotal += player.handicap;
+          idx = (idx + 1) % teamCount;
+        });
+        const totals = teams.map(t => t.rawTotal);
+        const spread = Math.max(...totals) - Math.min(...totals);
+        if (spread < bestSpread) {
+          bestSpread = spread;
+          bestTeams = teams;
+        }
+      }
+
+      return { teams: bestTeams, unused: players.slice(totalSlots) };
+    }
+
+    function applyAllowances(teams) {
+      teams.forEach(team => {
+        team.players.sort((a, b) => a.handicap - b.handicap);
+        team.allowance = calcAllowanceForTeam(team.players);
+        team.adjusted = team.allowance;
+      });
+    }
+
+    function renderResults(teams, unused, teamCount, playersPerTeam) {
+      applyAllowances(teams);
+      const totals = teams.map(t => t.rawTotal);
+      const allowances = teams.map(t => t.allowance);
+      const min = Math.min(...allowances);
+      const max = Math.max(...allowances);
+      const spread = max - min;
+      const avg = allowances.reduce((a, b) => a + b, 0) / allowances.length;
+
+      summaryEl.innerHTML = `
+        <div class="stat"><div class="label">Teams</div><div class="value">${teamCount}</div></div>
+        <div class="stat"><div class="label">Players per team</div><div class="value">${playersPerTeam}</div></div>
+        <div class="stat"><div class="label">Average team allowance</div><div class="value">${avg.toFixed(1)}</div></div>
+        <div class="stat"><div class="label">Allowance spread</div><div class="value">${spread.toFixed(1)}</div></div>
+      `;
+
+      resultsEl.innerHTML = teams.map(team => `
+        <div class="team">
+          <h3>Team ${team.id}</h3>
+          <div class="team-meta">
+            Raw handicap total: ${team.rawTotal.toFixed(1)}<br>
+            Scramble allowance: ${team.allowance.toFixed(1)}
+          </div>
+          <ul>
+            ${team.players.map(p => `<li>${escapeHtml(p.name)} — ${p.handicap.toFixed(1)}</li>`).join('')}
+          </ul>
+        </div>
+      `).join('');
+
+      notesEl.innerHTML = unused.length
+        ? `Unused players: ${unused.map(p => `${escapeHtml(p.name)} (${p.handicap.toFixed(1)})`).join(', ')}`
+        : `All players assigned. Lower handicaps have been spread across teams to keep the event fair.`;
+
+      lastTeamsForExport = teams;
+    }
+
+    function generate() {
+      clearError();
+
+      const teamCount = Number(teamCountInput.value);
+      const playersPerTeam = Number(playersPerTeamInput.value);
+
+      if (!Number.isInteger(teamCount) || teamCount < 1) return showError('Enter a valid number of teams.');
+      if (!Number.isInteger(playersPerTeam) || playersPerTeam < 1) return showError('Enter a valid players-per-team value.');
+
+      const players = getPlayers().filter(p => p.name || !Number.isNaN(p.handicap));
+
+      if (players.length === 0) return showError('Add at least one player.');
+      for (const p of players) {
+        if (!p.name) return showError('Every player needs a name.');
+        if (Number.isNaN(p.handicap)) return showError(`Handicap missing for ${p.name}.`);
+        if (p.handicap < 0) return showError(`Handicap cannot be negative for ${p.name}.`);
+      }
+
+      if (players.length < teamCount * playersPerTeam) {
+        return showError(`Need ${teamCount * playersPerTeam} players for ${teamCount} teams of ${playersPerTeam}. You currently have ${players.length}.`);
+      }
+
+      let result;
+      const method = balanceMethodSelect.value;
+      if (method === 'greedy') {
+        result = balanceGreedy(players, teamCount, playersPerTeam);
+      } else if (method === 'snake') {
+        result = balanceSnake(players, teamCount, playersPerTeam);
+      } else if (method === 'randomBalanced') {
+        result = balanceRandomThenRebalance(players, teamCount, playersPerTeam);
+      } else if (method === 'lowCapAnchor') {
+        result = balanceLowCapAnchor(players, teamCount, playersPerTeam);
+      } else if (method === 'minVariance') {
+        result = balanceMinVariance(players, teamCount, playersPerTeam);
+      } else {
+        result = balanceGreedy(players, teamCount, playersPerTeam);
+      }
+
+      renderResults(result.teams, result.unused, teamCount, playersPerTeam);
+    }
+
+    function exportCsv() {
+      if (!lastTeamsForExport || !lastTeamsForExport.length) {
+        showError('Generate teams before exporting to CSV.');
+        return;
+      }
+      let lines = ['Team,Player,Handicap,Team Raw Total,Team Allowance'];
+      lastTeamsForExport.forEach(team => {
+        const raw = team.rawTotal.toFixed(1);
+        const allowance = (team.allowance ?? 0).toFixed(1);
+        team.players.forEach(p => {
+          const cols = [
+            `Team ${team.id}`,
+            `"${p.name.replace(/"/g, '""')}"`,
+            p.handicap.toFixed(1),
+            raw,
+            allowance
+          ];
+          lines.push(cols.join(','));
+        });
+      });
+      const csv = lines.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'golf_teams.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('setRowsBtn').addEventListener('click', () => {
+      const n = Math.max(1, Number(autoRowsInput.value) || 1);
+      setRows(n);
+    });
+
+    document.getElementById('addPlayerBtn').addEventListener('click', () => {
+      playersBody.appendChild(createRow());
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', generate);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+
+    document.getElementById('fillExampleBtn').addEventListener('click', () => {
+      const sample = [
+        ['Alex', 3.2], ['Ben', 11.4], ['Chris', 18.7], ['Dan', 24.1],
+        ['Eli', 5.8], ['Finn', 14.6], ['Gus', 20.2], ['Hugh', 27.9],
+        ['Ian', 8.0], ['Jack', 16.3], ['Kyle', 22.5], ['Liam', 30.0]
+      ];
+      setRows(sample.length);
+      [...playersBody.querySelectorAll('tr')].forEach((row, i) => {
+        row.querySelector('.player-name').value = sample[i][0];
+        row.querySelector('.player-hcp').value = sample[i][1];
+      });
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      teamCountInput.value = 3;
+      playersPerTeamInput.value = 4;
+      autoRowsInput.value = 12;
+      setRows(12);
+      resultsEl.innerHTML = '';
+      summaryEl.innerHTML = '';
+      notesEl.innerHTML = '';
+      lastTeamsForExport = null;
+      clearError();
+    });
+
+    explainBalanceBtn.addEventListener('click', () => {
+      modalBackdrop.style.display = 'flex';
+    });
+
+    modalCloseBtn.addEventListener('click', () => {
+      modalBackdrop.style.display = 'none';
+    });
+
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) modalBackdrop.style.display = 'none';
+    });
+
+    setRows(12);
+  </script>
+</body>
+</html>

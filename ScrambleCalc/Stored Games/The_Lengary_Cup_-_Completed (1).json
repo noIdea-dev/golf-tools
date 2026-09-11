@@ -1,0 +1,118 @@
+{
+  "id": "7ca01e2c-79c6-4583-b943-846f1d0d542a",
+  "name": "The Lengary Cup - Completed",
+  "courseName": "Sire",
+  "slope": 122,
+  "playersPerTeam": 2,
+  "teams": [
+    {
+      "id": "c97d8d36-f098-4250-bbce-66fae3753653",
+      "name": "Dongheads",
+      "players": [
+        {
+          "name": "Matt",
+          "handicap": 16
+        },
+        {
+          "name": "Dave",
+          "handicap": 30
+        }
+      ],
+      "totalScore": 80
+    },
+    {
+      "id": "88bc9e4d-6e90-46e8-b51f-91d6961f0356",
+      "name": "PakBesar's",
+      "players": [
+        {
+          "name": "Shane",
+          "handicap": 7
+        },
+        {
+          "name": "Thomas",
+          "handicap": 14
+        }
+      ],
+      "totalScore": 74
+    },
+    {
+      "id": "d041668c-c0f0-4b6d-b18c-1bfa3fe6598b",
+      "name": "Wantabees",
+      "players": [
+        {
+          "name": "Garry",
+          "handicap": 14
+        },
+        {
+          "name": "Jarzy",
+          "handicap": 29
+        }
+      ],
+      "totalScore": 86
+    },
+    {
+      "id": "9fd613d2-0881-4df8-a1cc-b4ca1252cde9",
+      "name": "Oddballs",
+      "players": [
+        {
+          "name": "Scott",
+          "handicap": 22
+        },
+        {
+          "name": "Drew",
+          "handicap": 30
+        }
+      ],
+      "totalScore": 94
+    },
+    {
+      "id": "c07e0864-7065-49fa-8f82-57ed6ca176e2",
+      "name": "Gunnado's",
+      "players": [
+        {
+          "name": "Shawn",
+          "handicap": 20
+        },
+        {
+          "name": "Smithy",
+          "handicap": 36
+        }
+      ],
+      "totalScore": 85
+    },
+    {
+      "id": "d842d973-6ecd-4605-8659-e124bef57175",
+      "name": "Shages",
+      "players": [
+        {
+          "name": "Greg",
+          "handicap": 23
+        },
+        {
+          "name": "Max",
+          "handicap": 27
+        }
+      ],
+      "totalScore": 85
+    },
+    {
+      "id": "b38f2b7e-592c-43b4-9759-138488d54c69",
+      "name": "Hasbeen's",
+      "players": [
+        {
+          "name": "Arthur",
+          "handicap": 25
+        },
+        {
+          "name": "Heinz",
+          "handicap": 30
+        }
+      ],
+      "totalScore": 102
+    }
+  ],
+  "createdAt": "2026-06-16T22:25:14.615Z",
+  "updatedAt": "2026-07-09T06:02:25.039Z",
+  "countbackType": "18",
+  "completed": true
+}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scramble Golf Handicap Calculator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { text-align: center; color: #2c5e2e; }
+        .team { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .team h2 { margin-top: 0; color: #333; }
+        .player-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .player-row span { width: 80px; }
+        .player-row input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .player-row label { width: 100px; }
+        button { background: #2c5e2e; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #3d7a3d; }
+        .result { background: #2c5e2e; color: #fff; padding: 20px; border-radius: 8px; text-align: center; font-size: 24px; margin-top: 20px; }
+        .player-count { display: flex; gap: 10px; margin-bottom: 15px; }
+        .player-count button { flex: 1; padding: 8px; background: #e0e0e0; color: #333; }
+        .player-count button.active { background: #2c5e2e; color: #fff; }
+        .formula { font-size: 12px; color: #666; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Scramble Golf Handicap Calculator</h1>
+
+    <div class="team" id="team1">
+        <h2>Team 1</h2>
+        <div class="player-count">
+            <button onclick="setPlayerCount(1, 2)">2 Players</button>
+            <button onclick="setPlayerCount(1, 3)">3 Players</button>
+            <button onclick="setPlayerCount(1, 4)">4 Players</button>
+        </div>
+        <div id="team1-players">
+            <div class="player-row"><label>Player 1:</label><input type="number" id="t1p1" placeholder="Lowest Hcp"></div>
+            <div class="player-row"><label>Player 2:</label><input type="number" id="t1p2" placeholder="Highest Hcp"></div>
+        </div>
+    </div>
+
+    <div class="team" id="team2">
+        <h2>Team 2</h2>
+        <div class="player-count">
+            <button onclick="setPlayerCount(2, 2)">2 Players</button>
+            <button onclick="setPlayerCount(2, 3)">3 Players</button>
+            <button onclick="setPlayerCount(2, 4)">4 Players</button>
+        </div>
+        <div id="team2-players">
+            <div class="player-row"><label>Player 1:</label><input type="number" id="t2p1" placeholder="Lowest Hcp"></div>
+            <div class="player-row"><label>Player 2:</label><input type="number" id="t2p2" placeholder="Highest Hcp"></div>
+        </div>
+    </div>
+
+    <button onclick="calculate()" style="width: 100%;">Calculate Team Handicaps</button>
+
+    <div id="results" class="result" style="display: none;">
+        Team 1: <strong id="result1"></strong> &nbsp;|&nbsp; Team 2: <strong id="result2"></strong>
+    </div>
+
+    <p class="formula">
+        2 Players: 35% lowest + 15% highest<br>
+        3 Players: 25% lowest + 20% middle + 15% highest<br>
+        4 Players: 25% lowest + 20% 2nd + 15% 3rd + 10% highest
+    </p>
+
+    <script>
+        let team1Count = 2, team2Count = 2;
+
+        function setPlayerCount(team, count) {
+            const container = document.getElementById(`team${team}-players`);
+            container.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                const row = document.createElement('div');
+                row.className = 'player-row';
+                row.innerHTML = `<label>Player ${i}:</label><input type="number" id="t${team}p${i}" placeholder="${i === 1 ? 'Lowest' : i === count ? 'Highest' : 'Hcp'} Hcp">`;
+                container.appendChild(row);
+            }
+            if (team === 1) team1Count = count;
+            else team2Count = count;
+
+            document.querySelectorAll(`#team${team} .player-count button`).forEach((btn, idx) => {
+                btn.classList.toggle('active', [2, 3, 4][idx] === count);
+            });
+        }
+
+        function getValues(team, count) {
+            const vals = [];
+            for (let i = 1; i <= count; i++) {
+                const v = parseFloat(document.getElementById(`t${team}p${i}`).value) || 0;
+                vals.push(v);
+            }
+            return vals.sort((a, b) => a - b);
+        }
+
+        function calcTeam(values) {
+            const n = values.length;
+            if (n === 2) return Math.ceil(values[0] * 0.35 + values[1] * 0.15);
+            if (n === 3) return Math.ceil(values[0] * 0.25 + values[1] * 0.20 + values[2] * 0.15);
+            return Math.ceil(values[0] * 0.25 + values[1] * 0.20 + values[2] * 0.15 + values[3] * 0.10);
+        }
+
+        function calculate() {
+            const t1 = calcTeam(getValues(1, team1Count));
+            const t2 = calcTeam(getValues(2, team2Count));
+            document.getElementById('result1').textContent = t1;
+            document.getElementById('result2').textContent = t2;
+            document.getElementById('results').style.display = 'block';
+        }
+
+        setPlayerCount(1, 2);
+        setPlayerCount(2, 2);
+    </script>
+</body>
+</html>

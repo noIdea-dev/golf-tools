@@ -1,0 +1,14 @@
+# Excluded folders
+Flightscope Mevo*/
+Golf Videos/
+
+# Python virtualenvs + cache
+GolfCourseScraper/virt/
+GolfCourseScraper/logs/
+golf_handicap_calculator/.virt/
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store

@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modified System 36 Golf Scorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #1e3c72;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], input[type="number"], input[type="file"], select {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .player-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .player-card {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .player-card:hover {
+            transform: scale(1.05);
+        }
+
+        .player-card.active {
+            box-shadow: 0 0 0 4px #ffd700;
+        }
+
+        .player-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .remove-player {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2em;
+            line-height: 1;
+        }
+
+        .remove-player:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .scorecard {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tbody tr:hover {
+            background: #e3f2fd;
+        }
+
+        .hole-input {
+            width: 50px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+
+        .results-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+
+        .winner {
+            background: #ffd89b !important;
+            color: #1e3c72;
+            font-weight: bold;
+        }
+
+        .trophy {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .save-load-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .saved-rounds {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .saved-round-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .saved-round-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .saved-round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .saved-round-name {
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .saved-round-date {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .saved-round-info {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .delete-round {
+            background: #f5576c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.85em;
+            cursor: pointer;
+        }
+
+        .delete-round:hover {
+            background: #e04858;
+        }
+
+        #scorecardPreview img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .course-preset {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .course-preset:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .course-preset h4 {
+            color: #1e3c72;
+            margin-bottom: 5px;
+        }
+
+        .course-preset p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+
+            button, .action-buttons, .save-load-section, .input-group, .remove-player {
+                display: none !important;
+            }
+
+            .player-card {
+                cursor: default;
+            }
+
+            .player-card:hover {
+                transform: none;
+            }
+
+            .scorecard {
+                overflow-x: visible;
+            }
+
+            table {
+                font-size: 0.8em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            input[type="text"], input[type="number"], select {
+                min-width: 100%;
+            }
+
+            table {
+                font-size: 0.75em;
+            }
+
+            th, td {
+                padding: 5px;
+            }
+
+            .hole-input {
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⛳ Modified System 36 Golf Scorer</h1>
+            <p>System 36 or Official Handicaps - You Choose!</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <h4>How Modified System 36 Works:</h4>
+                <ul>
+                    <li><strong>Players with Official Handicaps:</strong> Enter their handicap, and their net score = gross score - official handicap</li>
+                    <li><strong>Players without Handicaps:</strong> Use System 36 calculation automatically</li>
+                </ul>
+                <h4 style="margin-top: 15px;">System 36 Rules (for players without handicaps):</h4>
+                <ul>
+                    <li><strong>Par or better:</strong> 2 points per hole</li>
+                    <li><strong>Bogey (+1):</strong> 1 point per hole</li>
+                    <li><strong>Double bogey or worse:</strong> 0 points</li>
+                    <li><strong>Handicap:</strong> 36 - Total Points</li>
+                    <li><strong>Net Score:</strong> Gross Score - Handicap</li>
+                </ul>
+                <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #90caf9; color: #1565c0;">
+                    <strong>✨ New!</strong> Upload your course scorecard image to reference while entering hole data!
+                </p>
+            </div>
+
+            <div class="save-load-section">
+                <h2 class="section-title">Save & Load Rounds</h2>
+                <div class="action-buttons">
+                    <input 
+                        type="text"
+                        id="roundName"
+                        placeholder="Round name (e.g., Lombok Kosaido - Nov 18)"
+                        style="flex: 2; min-width: 200px;"
+                    />
+                    <button onclick="saveRound()">💾 Save Current Round</button>
+                    <button onclick="clearCurrent()" class="danger">🗑️ Clear Current</button>
+                    <button onclick="printRound()">🖨️ Print Results</button>
+                </div>
+                <div class="action-buttons">
+                    <input 
+                        type="file" 
+                        id="importRoundFile" 
+                        accept=".json"
+                        onchange="importRoundFromFile(this)"
+                        style="display: none;"
+                    />
+                    <button onclick="document.getElementById('importRoundFile').click()">📂 Import Saved Game</button>
+                    <button onclick="exportAllData()">📦 Export All Data</button>
+                </div>
+                <div id="savedRoundsList" class="saved-rounds"></div>
+            </div>
+
+            <div class="save-load-section">
+                <h2 class="section-title">Import Course Scorecard</h2>
+                <p style="color: #666; margin-bottom: 10px;">Upload an image of your course scorecard to reference while entering hole data:</p>
+                <div class="action-buttons">
+                    <input 
+                        type="file" 
+                        id="scorecardImage" 
+                        accept="image/*"
+                        onchange="handleScorecardUpload(this)"
+                        style="flex: 1;"
+                    />
+                    <button id="clearImageButton" onclick="clearScorecardImage()" class="hidden danger">
+                        🗑️ Clear Image
+                    </button>
+                </div>
+                <div id="scorecardPreview" style="margin-top: 15px;"></div>
+                <div id="scorecardDataEntry" class="hidden" style="margin-top: 20px; padding: 20px; background: white; border-radius: 8px; border: 2px solid #667eea;">
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Course Data <span id="extractedLabel" class="hidden" style="color: #00c853; font-size: 0.9em;">(Auto-Extracted)</span></h3>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Course Name:</label>
+                        <input type="text" id="courseName" placeholder="e.g., Sira Beach Golf Club" style="width: 100%;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Select Tees:</label>
+                        <select id="teeSelection" style="width: 100%;">
+                            <option value="championship">Championship (Black/Gold)</option>
+                            <option value="mens">Men's (Blue)</option>
+                            <option value="ladies">Ladies (Red)</option>
+                            <option value="senior">Senior (White)</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                        <div style="grid-column: 1 / -1; font-weight: bold; color: #1e3c72; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                            Front 9 - Hole Pars
+                        </div>
+                        <div><label>Hole 1:</label><input type="number" id="par1" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 2:</label><input type="number" id="par2" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 3:</label><input type="number" id="par3" min="3" max="6" value="3" class="hole-input"></div>
+                        <div><label>Hole 4:</label><input type="number" id="par4" min="3" max="6" value="5" class="hole-input"></div>
+                        <div><label>Hole 5:</label><input type="number" id="par5" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 6:</label><input type="number" id="par6" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 7:</label><input type="number" id="par7" min="3" max="6" value="3" class="hole-input"></div>
+                        <div><label>Hole 8:</label><input type="number" id="par8" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 9:</label><input type="number" id="par9" min="3" max="6" value="5" class="hole-input"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                        <div style="grid-column: 1 / -1; font-weight: bold; color: #1e3c72; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                            Back 9 - Hole Pars
+                        </div>
+                        <div><label>Hole 10:</label><input type="number" id="par10" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 11:</label><input type="number" id="par11" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 12:</label><input type="number" id="par12" min="3" max="6" value="3" class="hole-input"></div>
+                        <div><label>Hole 13:</label><input type="number" id="par13" min="3" max="6" value="5" class="hole-input"></div>
+                        <div><label>Hole 14:</label><input type="number" id="par14" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 15:</label><input type="number" id="par15" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 16:</label><input type="number" id="par16" min="3" max="6" value="3" class="hole-input"></div>
+                        <div><label>Hole 17:</label><input type="number" id="par17" min="3" max="6" value="4" class="hole-input"></div>
+                        <div><label>Hole 18:</label><input type="number" id="par18" min="3" max="6" value="5" class="hole-input"></div>
+                    </div>
+                    <button onclick="applyScorecardData()" style="width: 100%;">Apply Scorecard Data</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Course Setup</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: #1e3c72; margin-bottom: 10px; font-size: 1.1em;">Quick Course Presets:</h3>
+                    <div class="course-preset" onclick="loadSiraBeach()">
+                        <h4>🏖️ Sira Beach Golf Club</h4>
+                        <p>Par 72 • 6,245m • Sire Bay, Lombok</p>
+                    </div>
+                    <div class="course-preset" onclick="loadStandardCourse()">
+                        <h4>⛳ Standard Par 72 Course</h4>
+                        <p>Par 72 • Traditional layout</p>
+                    </div>
+                    <div id="customPresetsContainer"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <strong>Course Par:</strong>
+                        <input 
+                            type="number" 
+                            id="coursePar"
+                            value="72"
+                            style="flex: none; width: 80px;"
+                        />
+                    </label>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Add Players</h2>
+                <div class="input-group">
+                    <input 
+                        type="text"
+                        id="playerName"
+                        placeholder="Player name"
+                        style="flex: 2;"
+                    />
+                    <input 
+                        type="number"
+                        id="playerHandicap"
+                        placeholder="Official Handicap (optional)"
+                        min="0"
+                        max="54"
+                        step="0.1"
+                        style="flex: 1;"
+                    />
+                    <button onclick="addPlayer()">Add Player</button>
+                </div>
+                <p style="color: #666; font-size: 0.9em; margin-top: 5px;">
+                    💡 Leave handicap blank to use System 36 calculation. Enter official handicap for club members.
+                </p>
+
+                <div id="playerList" class="player-list"></div>
+            </div>
+
+            <div id="scoringSection" class="section hidden">
+                <h2 class="section-title">Score Entry - <span id="currentPlayerName"></span></h2>
+                
+                <div id="currentCourseInfo" style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none;">
+                    <strong>Current Course:</strong> <span id="currentCourseName"></span> | 
+                    <strong>Tees:</strong> <span id="currentTees"></span> | 
+                    <strong>Par:</strong> <span id="currentPar"></span>
+                </div>
+                
+                <div class="scorecard">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hole</th>
+                                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
+                                <th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th>
+                                <th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="parRow">
+                                <td><strong>Par</strong></td>
+                            </tr>
+                            <tr id="scoreRow">
+                                <td><strong>Score</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="playerStats" class="stats"></div>
+            </div>
+
+            <div id="resultsSection" class="section hidden">
+                <h2 class="section-title">Results</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Gross</th>
+                            <th>To Par</th>
+                            <th>S36 Pts</th>
+                            <th>HCP</th>
+                            <th>Type</th>
+                            <th>Net</th>
+                            <th>Back 9</th>
+                            <th>Last 6</th>
+                            <th>Last 3</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+                <div id="tiebreakNote" class="hidden" style="margin-top: 15px; padding: 12px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 8px; font-size: 0.9em; color: #555;">
+                    <strong>🔄 Countback Method:</strong> Tied players are separated by most System 36 points on Back 9 → Last 6 holes → Last 3 holes → Last hole. A "Dead Heat" means scores are identical across all countback stages.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let players = [];
+        let selectedPlayerId = null;
+        let holePars = [4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5];
+        let currentCourse = {
+            name: '',
+            tees: '',
+            pars: []
+        };
+        let uploadedImageData = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePars();
+            updateCoursePar();
+            loadSavedRounds();
+            renderSavedRoundsList();
+            loadCustomPresets();
+            
+            document.getElementById('playerName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addPlayer();
+            });
+            
+            document.getElementById('roundName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') saveRound();
+            });
+        });
+
+        function loadCustomPresets() {
+            const savedCourses = JSON.parse(localStorage.getItem('golfCourses') || '[]');
+            const container = document.getElementById('customPresetsContainer');
+            
+            if (savedCourses.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const headerDiv = document.createElement('div');
+            headerDiv.style.marginTop = '15px';
+            headerDiv.style.paddingTop = '15px';
+            headerDiv.style.borderTop = '2px solid #e0e0e0';
+            headerDiv.innerHTML = '<h4 style="color: #667eea; margin-bottom: 10px; font-size: 1em;">Your Saved Courses:</h4>';
+            
+            container.innerHTML = '';
+            container.appendChild(headerDiv);
+            
+            savedCourses.forEach((course, index) => {
+                const totalPar = course.pars.reduce((sum, par) => sum + par, 0);
+                const teeColor = getTeeColorEmoji(course.tees);
+                const preset = document.createElement('div');
+                preset.className = 'course-preset';
+                preset.style.position = 'relative';
+                
+                // Create the content first
+                const contentDiv = document.createElement('div');
+                contentDiv.innerHTML = `
+                    <h4>${teeColor} ${course.name}</h4>
+                    <p>Par ${totalPar} • ${course.tees} tees</p>
+                `;
+                
+                // Create delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.style.position = 'absolute';
+                deleteBtn.style.top = '10px';
+                deleteBtn.style.right = '10px';
+                deleteBtn.style.background = '#f5576c';
+                deleteBtn.style.padding = '4px 8px';
+                deleteBtn.style.fontSize = '0.8em';
+                deleteBtn.style.border = 'none';
+                deleteBtn.style.borderRadius = '4px';
+                deleteBtn.style.color = 'white';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.textContent = 'Delete';
+                
+                // Use closure to capture course data
+                const courseName = course.name;
+                const courseTees = course.tees;
+                
+                deleteBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    deleteCustomCourseByName(courseName, courseTees);
+                });
+                
+                preset.addEventListener('click', function() { 
+                    loadCustomCourse(index); 
+                });
+                
+                preset.appendChild(contentDiv);
+                preset.appendChild(deleteBtn);
+                container.appendChild(preset);
+            });
+        }
+        
+        function deleteCustomCourseByName(name, tees) {
+            console.log('Delete clicked for:', name, tees);
+            if (confirm(`Delete "${name}" (${tees} tees)?`)) {
+                console.log('User confirmed deletion');
+                let savedCourses = JSON.parse(localStorage.getItem('golfCourses') || '[]');
+                console.log('Courses before delete:', savedCourses.length);
+                savedCourses = savedCourses.filter(c => !(c.name === name && c.tees === tees));
+                console.log('Courses after delete:', savedCourses.length);
+                localStorage.setItem('golfCourses', JSON.stringify(savedCourses));
+                console.log('Saved to localStorage, reloading presets...');
+                loadCustomPresets();
+            } else {
+                console.log('User cancelled deletion');
+            }
+        }
+
+        function getTeeColorEmoji(teeType) {
+            const teeMap = {
+                'championship': '⚫',
+                'mens': '🔵',
+                'ladies': '🔴',
+                'senior': '⚪',
+                'custom': '🟡'
+            };
+            return teeMap[teeType] || '⛳';
+        }
+
+        function loadCustomCourse(index) {
+            const savedCourses = JSON.parse(localStorage.getItem('golfCourses') || '[]');
+            const course = savedCourses[index];
+            
+            if (course) {
+                console.log('Loading custom course:', course.name, course.pars);
+                holePars = [...course.pars];
+                currentCourse = {
+                    name: course.name,
+                    tees: course.tees,
+                    pars: [...course.pars]
+                };
+                
+                updateAllParDisplays();
+                updateCoursePar();
+                updateCourseInfo();
+                render();
+            }
+        }
+
+
+        function initializePars() {
+            const parRow = document.getElementById('parRow');
+            for (let i = 0; i < 18; i++) {
+                const td = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'hole-input';
+                input.value = holePars[i];
+                input.min = 3;
+                input.max = 5;
+                input.onchange = function() {
+                    holePars[i] = parseInt(this.value) || 4;
+                    updateCoursePar();
+                    render();
+                };
+                td.appendChild(input);
+                parRow.appendChild(td);
+            }
+            
+            const totalTd = document.createElement('td');
+            totalTd.innerHTML = '<strong id="parTotal">72</strong>';
+            parRow.appendChild(totalTd);
+        }
+
+        function updateCoursePar() {
+            const total = holePars.reduce((sum, par) => sum + par, 0);
+            document.getElementById('coursePar').value = total;
+            const parTotalElem = document.getElementById('parTotal');
+            if (parTotalElem) {
+                parTotalElem.textContent = total;
+            }
+        }
+
+        function loadSiraBeach() {
+            console.log('Loading Sira Beach Golf Club...');
+            // Sira Beach Golf Club - Par 72 (Correct pars: 4,3,5,4,4,5,3,4,4,4,4,5,3,4,5,3,4,4)
+            holePars = [4, 3, 5, 4, 4, 5, 3, 4, 4, 4, 4, 5, 3, 4, 5, 3, 4, 4];
+            console.log('New pars:', holePars);
+            
+            currentCourse = {
+                name: 'Sira Beach Golf Club',
+                tees: 'championship',
+                pars: [...holePars]
+            };
+            
+            // Force update all par displays
+            updateAllParDisplays();
+            updateCoursePar();
+            updateCourseInfo();
+            render();
+        }
+
+        function updateAllParDisplays() {
+            // Update the par inputs in the scorecard table
+            const parInputs = document.querySelectorAll('#parRow input');
+            console.log('Updating par inputs, found:', parInputs.length);
+            
+            if (parInputs.length === 18) {
+                parInputs.forEach((input, i) => {
+                    input.value = holePars[i];
+                    console.log(`Set hole ${i+1} to par ${holePars[i]}`);
+                });
+            } else {
+                console.error('Expected 18 par inputs, found:', parInputs.length);
+            }
+            
+            // Also update the data entry form inputs if visible
+            for (let i = 1; i <= 18; i++) {
+                const parInput = document.getElementById(`par${i}`);
+                if (parInput) {
+                    parInput.value = holePars[i - 1];
+                }
+            }
+        }
+
+        function loadStandardCourse() {
+            console.log('Loading Standard Course...');
+            holePars = [4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5];
+            console.log('New pars:', holePars);
+            
+            currentCourse = {
+                name: 'Standard Par 72 Course',
+                tees: 'mens',
+                pars: [...holePars]
+            };
+            
+            updateAllParDisplays();
+            updateCoursePar();
+            updateCourseInfo();
+            render();
+        }
+
+        function handleScorecardUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageData = e.target.result;
+                    
+                    const preview = document.getElementById('scorecardPreview');
+                    preview.innerHTML = `
+                        <div style="position: relative;">
+                            <img src="${e.target.result}" alt="Scorecard" style="max-width: 100%; border-radius: 8px; cursor: pointer;" onclick="this.style.maxWidth = this.style.maxWidth === '100%' ? 'none' : '100%'">
+                            <p style="color: #666; margin-top: 10px; font-size: 0.9em;">
+                                <strong>Click image to zoom.</strong> Reference this scorecard to enter the par values below.
+                            </p>
+                        </div>
+                    `;
+                    
+                    // Show the clear button
+                    const clearBtn = document.getElementById('clearImageButton');
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                    
+                    // Show the data entry form
+                    const dataEntry = document.getElementById('scorecardDataEntry');
+                    if (dataEntry) {
+                        dataEntry.classList.remove('hidden');
+                        // Scroll to data entry
+                        dataEntry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearScorecardImage() {
+            console.log('Clearing scorecard image...');
+            
+            // Clear the uploaded image data
+            uploadedImageData = null;
+            
+            // Clear the file input
+            const fileInput = document.getElementById('scorecardImage');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
+            // Hide and clear preview
+            const preview = document.getElementById('scorecardPreview');
+            if (preview) {
+                preview.innerHTML = '';
+            }
+            
+            // Hide clear button
+            const clearBtn = document.getElementById('clearImageButton');
+            if (clearBtn) {
+                clearBtn.classList.add('hidden');
+            }
+            
+            // Hide data entry form
+            const dataEntry = document.getElementById('scorecardDataEntry');
+            if (dataEntry) {
+                dataEntry.classList.add('hidden');
+            }
+            
+            console.log('Scorecard image cleared');
+        }
+
+
+        function applyScorecardData() {
+            const courseName = document.getElementById('courseName').value.trim();
+            const teeSelection = document.getElementById('teeSelection').value;
+            
+            // Collect all par values
+            const newPars = [];
+            for (let i = 1; i <= 18; i++) {
+                const parValue = parseInt(document.getElementById(`par${i}`).value) || 4;
+                newPars.push(parValue);
+            }
+            
+            // Update global holePars and current course
+            holePars = [...newPars];
+            currentCourse = {
+                name: courseName || 'Custom Course',
+                tees: teeSelection,
+                pars: [...newPars]
+            };
+            
+            // Update the par inputs in the scorecard table
+            const parInputs = document.querySelectorAll('#parRow input');
+            if (parInputs.length === 18) {
+                parInputs.forEach((input, i) => {
+                    input.value = holePars[i];
+                });
+            }
+            
+            updateCoursePar();
+            updateCourseInfo();
+            render();
+            
+            // Save course as a preset
+            if (courseName) {
+                const coursePreset = {
+                    name: courseName,
+                    tees: teeSelection,
+                    pars: [...newPars],
+                    date: new Date().toISOString()
+                };
+                
+                let savedCourses = JSON.parse(localStorage.getItem('golfCourses') || '[]');
+                // Check if course already exists
+                const existingIndex = savedCourses.findIndex(c => c.name === courseName && c.tees === teeSelection);
+                if (existingIndex >= 0) {
+                    savedCourses[existingIndex] = coursePreset;
+                } else {
+                    savedCourses.push(coursePreset);
+                }
+                localStorage.setItem('golfCourses', JSON.stringify(savedCourses));
+                
+                loadCustomPresets();
+            }
+            
+            // Hide the data entry form and clear button
+            const dataEntry = document.getElementById('scorecardDataEntry');
+            if (dataEntry) {
+                dataEntry.classList.add('hidden');
+            }
+            const clearBtn = document.getElementById('clearImageButton');
+            if (clearBtn) {
+                clearBtn.classList.add('hidden');
+            }
+            
+            // Clear the scorecard image
+            clearScorecardImage();
+            
+            // Scroll to course setup
+            document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateCourseInfo() {
+            if (currentCourse.name) {
+                const infoDiv = document.getElementById('currentCourseInfo');
+                const teeEmoji = getTeeColorEmoji(currentCourse.tees);
+                const totalPar = holePars.reduce((sum, par) => sum + par, 0);
+                
+                document.getElementById('currentCourseName').textContent = currentCourse.name;
+                document.getElementById('currentTees').textContent = `${teeEmoji} ${currentCourse.tees}`;
+                document.getElementById('currentPar').textContent = totalPar;
+                infoDiv.style.display = 'block';
+            }
+        }
+
+        function addPlayer() {
+            const nameInput = document.getElementById('playerName');
+            const handicapInput = document.getElementById('playerHandicap');
+            const name = nameInput.value.trim();
+            const handicap = handicapInput.value ? parseFloat(handicapInput.value) : null;
+            
+            if (name) {
+                const player = {
+                    id: Date.now(),
+                    name: name,
+                    officialHandicap: handicap,
+                    scores: Array(18).fill('')
+                };
+                players.push(player);
+                nameInput.value = '';
+                handicapInput.value = '';
+                
+                if (!selectedPlayerId) {
+                    selectedPlayerId = player.id;
+                }
+                
+                render();
+            }
+        }
+
+        function removePlayer(id) {
+            players = players.filter(p => p.id !== id);
+            if (selectedPlayerId === id) {
+                selectedPlayerId = players.length > 0 ? players[0].id : null;
+            }
+            render();
+        }
+
+        function selectPlayer(id) {
+            selectedPlayerId = id;
+            render();
+        }
+
+        function updateScore(playerId, holeIndex, value) {
+            const player = players.find(p => p.id === playerId);
+            if (player) {
+                player.scores[holeIndex] = value;
+                render();
+            }
+        }
+
+        function calculateSystem36Points(scores) {
+            return scores.reduce((total, score, index) => {
+                const numScore = parseInt(score) || 0;
+                const par = holePars[index];
+                
+                if (numScore === 0) return total;
+                if (numScore <= par) return total + 2;
+                if (numScore === par + 1) return total + 1;
+                return total;
+            }, 0);
+        }
+
+        function calculateSystem36PointsForHoles(scores, startHole, endHole) {
+            // Calculate System 36 points for a specific range of holes (0-indexed)
+            let points = 0;
+            for (let i = startHole; i <= endHole; i++) {
+                const numScore = parseInt(scores[i]) || 0;
+                const par = holePars[i];
+                if (numScore === 0) continue;
+                if (numScore <= par) points += 2;
+                else if (numScore === par + 1) points += 1;
+            }
+            return points;
+        }
+
+        function resolveTiebreaker(playerA, playerB) {
+            // Back 9: holes 9-17 (0-indexed)
+            const a9 = calculateSystem36PointsForHoles(playerA.scores, 9, 17);
+            const b9 = calculateSystem36PointsForHoles(playerB.scores, 9, 17);
+            if (a9 !== b9) return { winner: a9 > b9 ? playerA : playerB, reason: 'back 9' };
+
+            // Last 6: holes 12-17 (0-indexed)
+            const a6 = calculateSystem36PointsForHoles(playerA.scores, 12, 17);
+            const b6 = calculateSystem36PointsForHoles(playerB.scores, 12, 17);
+            if (a6 !== b6) return { winner: a6 > b6 ? playerA : playerB, reason: 'last 6 holes' };
+
+            // Last 3: holes 15-17 (0-indexed)
+            const a3 = calculateSystem36PointsForHoles(playerA.scores, 15, 17);
+            const b3 = calculateSystem36PointsForHoles(playerB.scores, 15, 17);
+            if (a3 !== b3) return { winner: a3 > b3 ? playerA : playerB, reason: 'last 3 holes' };
+
+            // Last hole: hole 17 (0-indexed)
+            const a1 = calculateSystem36PointsForHoles(playerA.scores, 17, 17);
+            const b1 = calculateSystem36PointsForHoles(playerB.scores, 17, 17);
+            if (a1 !== b1) return { winner: a1 > b1 ? playerA : playerB, reason: 'last hole' };
+
+            // Dead heat - cannot be separated
+            return { winner: null, reason: 'dead heat' };
+        }
+
+        function calculateResults() {
+            const coursePar = holePars.reduce((sum, par) => sum + par, 0);
+            
+            const results = players.map(player => {
+                const grossScore = player.scores.reduce((sum, score) => sum + (parseInt(score) || 0), 0);
+                
+                let handicap;
+                let handicapType;
+                
+                if (player.officialHandicap !== null && player.officialHandicap !== undefined) {
+                    // Use official handicap
+                    handicap = Math.round(player.officialHandicap);
+                    handicapType = 'Official';
+                } else {
+                    // Use System 36
+                    const system36Points = calculateSystem36Points(player.scores);
+                    handicap = 36 - system36Points;
+                    handicapType = 'System 36';
+                }
+                
+                const netScore = grossScore - handicap;
+                const scoreToPar = grossScore - coursePar;
+                const system36Points = calculateSystem36Points(player.scores);
+
+                // Pre-calculate countback segments for display
+                const back9Points = calculateSystem36PointsForHoles(player.scores, 9, 17);
+                const last6Points = calculateSystem36PointsForHoles(player.scores, 12, 17);
+                const last3Points = calculateSystem36PointsForHoles(player.scores, 15, 17);
+
+                return {
+                    ...player,
+                    grossScore,
+                    system36Points,
+                    handicap,
+                    handicapType,
+                    netScore,
+                    scoreToPar,
+                    back9Points,
+                    last6Points,
+                    last3Points,
+                    tiebreakReason: '',
+                    isTied: false
+                };
+            });
+
+            // Sort by net score first
+            results.sort((a, b) => a.netScore - b.netScore);
+
+            // Detect ties and apply countback
+            for (let i = 0; i < results.length - 1; i++) {
+                if (results[i].netScore === results[i + 1].netScore) {
+                    // Mark both as tied
+                    results[i].isTied = true;
+                    results[i + 1].isTied = true;
+
+                    // Resolve via countback
+                    const tieResult = resolveTiebreaker(results[i], results[i + 1]);
+                    if (tieResult.winner) {
+                        // Winner gets countback reason
+                        if (tieResult.winner.id === results[i].id) {
+                            results[i].tiebreakReason = `Won on ${tieResult.reason} countback`;
+                            results[i + 1].tiebreakReason = `Lost on ${tieResult.reason} countback`;
+                        } else {
+                            results[i + 1].tiebreakReason = `Won on ${tieResult.reason} countback`;
+                            results[i].tiebreakReason = `Lost on ${tieResult.reason} countback`;
+                        }
+                        // Re-sort these two based on countback
+                        if (tieResult.winner.id === results[i + 1].id) {
+                            [results[i], results[i + 1]] = [results[i + 1], results[i]];
+                        }
+                    } else {
+                        results[i].tiebreakReason = 'Dead heat';
+                        results[i + 1].tiebreakReason = 'Dead heat';
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        // Save/Load Functions
+        function saveRound() {
+            if (players.length === 0) {
+                alert('Please add players before saving.');
+                return;
+            }
+
+            const roundNameInput = document.getElementById('roundName');
+            const roundName = roundNameInput.value.trim() || `Round ${new Date().toLocaleDateString()}`;
+            
+            const roundData = {
+                id: Date.now(),
+                name: roundName,
+                date: new Date().toISOString(),
+                players: players,
+                holePars: holePars,
+                coursePar: holePars.reduce((sum, par) => sum + par, 0),
+                course: currentCourse // Save course info
+            };
+
+            // Save to localStorage
+            let savedRounds = JSON.parse(localStorage.getItem('golfRounds') || '[]');
+            savedRounds.push(roundData);
+            localStorage.setItem('golfRounds', JSON.stringify(savedRounds));
+
+            // Auto-download the round as a JSON file
+            downloadRoundAsFile(roundData);
+
+            roundNameInput.value = '';
+            renderSavedRoundsList();
+        }
+
+        function downloadRoundAsFile(roundData) {
+            // Create a safe filename from the round name
+            const safeFileName = roundData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const fileName = `${safeFileName}_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const dataStr = JSON.stringify(roundData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log('Round downloaded as:', fileName);
+        }
+
+        function importRoundFromFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const roundData = JSON.parse(e.target.result);
+                    
+                    // Validate the data
+                    if (!roundData.players || !roundData.holePars) {
+                        alert('Invalid round file format.');
+                        return;
+                    }
+                    
+                    // Load the round data
+                    players = roundData.players;
+                    holePars = [...roundData.holePars];
+                    
+                    // Restore course info if available
+                    if (roundData.course) {
+                        currentCourse = {
+                            name: roundData.course.name || '',
+                            tees: roundData.course.tees || '',
+                            pars: [...roundData.holePars]
+                        };
+                    }
+                    
+                    selectedPlayerId = players.length > 0 ? players[0].id : null;
+                    
+                    // Update par inputs in the scorecard table
+                    const parInputs = document.querySelectorAll('#parRow input');
+                    if (parInputs.length === 18) {
+                        parInputs.forEach((input, i) => {
+                            input.value = holePars[i];
+                        });
+                    }
+                    
+                    updateCoursePar();
+                    updateCourseInfo();
+                    render();
+                    
+                    // Scroll to results
+                    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                    
+                    alert(`Round "${roundData.name}" loaded successfully!`);
+                    
+                } catch (error) {
+                    console.error('Error importing round:', error);
+                    alert('Error loading round file. Please check the file format.');
+                }
+                
+                // Clear the file input
+                input.value = '';
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function exportAllData() {
+            const allData = {
+                rounds: JSON.parse(localStorage.getItem('golfRounds') || '[]'),
+                courses: JSON.parse(localStorage.getItem('golfCourses') || '[]'),
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const fileName = `system36_backup_${new Date().toISOString().split('T')[0]}.json`;
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            const roundCount = allData.rounds.length;
+            const courseCount = allData.courses.length;
+            alert(`Backup complete!\n${roundCount} rounds and ${courseCount} courses exported.`);
+        }
+
+        function loadSavedRounds() {
+            return JSON.parse(localStorage.getItem('golfRounds') || '[]');
+        }
+
+        function loadRound(id) {
+            const savedRounds = loadSavedRounds();
+            const round = savedRounds.find(r => r.id === id);
+            
+            if (round) {
+                console.log('Loading round:', round.name);
+                players = round.players;
+                holePars = [...round.holePars];
+                
+                // Restore course info if available
+                if (round.course) {
+                    currentCourse = {
+                        name: round.course.name || '',
+                        tees: round.course.tees || '',
+                        pars: [...round.holePars]
+                    };
+                }
+                
+                selectedPlayerId = players.length > 0 ? players[0].id : null;
+                
+                updateAllParDisplays();
+                updateCoursePar();
+                updateCourseInfo();
+                render();
+                
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function deleteRound(id) {
+            if (confirm('Are you sure you want to delete this saved round?')) {
+                let savedRounds = loadSavedRounds();
+                savedRounds = savedRounds.filter(r => r.id !== id);
+                localStorage.setItem('golfRounds', JSON.stringify(savedRounds));
+                renderSavedRoundsList();
+            }
+        }
+
+        function clearCurrent() {
+            if (confirm('Clear all current players and scores?')) {
+                players = [];
+                selectedPlayerId = null;
+                render();
+            }
+        }
+
+        function printRound() {
+            if (players.length === 0) {
+                alert('Please add players before printing.');
+                return;
+            }
+            window.print();
+        }
+
+        function renderSavedRoundsList() {
+            const savedRounds = loadSavedRounds();
+            const listDiv = document.getElementById('savedRoundsList');
+            
+            if (savedRounds.length === 0) {
+                listDiv.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No saved rounds yet. Save your current round above!</p>';
+                return;
+            }
+
+            listDiv.innerHTML = '';
+            
+            savedRounds.slice().reverse().forEach(round => {
+                const date = new Date(round.date);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const playerCount = round.players.length;
+                
+                const card = document.createElement('div');
+                card.className = 'saved-round-card';
+                card.onclick = function() { loadRound(round.id); };
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-round';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    deleteRound(round.id);
+                };
+                
+                // Show course name if available
+                const courseName = round.course && round.course.name ? round.course.name : 'Custom Course';
+                const teeInfo = round.course && round.course.tees ? ` • ${getTeeColorEmoji(round.course.tees)} ${round.course.tees}` : '';
+                
+                card.innerHTML = `
+                    <div class="saved-round-header">
+                        <div>
+                            <div class="saved-round-name">${round.name}</div>
+                            <div class="saved-round-date">${dateStr}</div>
+                        </div>
+                    </div>
+                    <div class="saved-round-info">
+                        ${courseName}${teeInfo}<br>
+                        ${playerCount} player${playerCount !== 1 ? 's' : ''} • Par ${round.coursePar}
+                    </div>
+                `;
+                
+                card.querySelector('.saved-round-header').appendChild(deleteBtn);
+                listDiv.appendChild(card);
+            });
+        }
+
+        function render() {
+            renderPlayerList();
+            renderScoreEntry();
+            renderResults();
+        }
+
+        function renderPlayerList() {
+            const playerList = document.getElementById('playerList');
+            playerList.innerHTML = '';
+
+            players.forEach(player => {
+                const card = document.createElement('div');
+                card.className = 'player-card' + (player.id === selectedPlayerId ? ' active' : '');
+                card.onclick = () => selectPlayer(player.id);
+                
+                const handicapDisplay = player.officialHandicap !== null && player.officialHandicap !== undefined 
+                    ? `HCP: ${player.officialHandicap}` 
+                    : 'System 36';
+                
+                card.innerHTML = `
+                    <div class="remove-player" onclick="event.stopPropagation(); removePlayer(${player.id})">×</div>
+                    <h3>${player.name}</h3>
+                    <p style="font-size: 0.9em; opacity: 0.9;">${handicapDisplay}</p>
+                    <p style="font-size: 0.85em; margin-top: 3px;">Click to enter scores</p>
+                `;
+                
+                playerList.appendChild(card);
+            });
+        }
+
+        function renderScoreEntry() {
+            const section = document.getElementById('scoringSection');
+            const currentPlayer = players.find(p => p.id === selectedPlayerId);
+            
+            if (!currentPlayer) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            const handicapInfo = currentPlayer.officialHandicap !== null && currentPlayer.officialHandicap !== undefined
+                ? ` (Official HCP: ${currentPlayer.officialHandicap})`
+                : ' (System 36)';
+            document.getElementById('currentPlayerName').textContent = currentPlayer.name + handicapInfo;
+            
+            const scoreRow = document.getElementById('scoreRow');
+            scoreRow.innerHTML = '<td><strong>Score</strong></td>';
+            
+            for (let i = 0; i < 18; i++) {
+                const td = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'hole-input';
+                input.value = currentPlayer.scores[i];
+                input.min = 1;
+                input.max = 15;
+                input.onchange = function() {
+                    updateScore(currentPlayer.id, i, this.value);
+                };
+                td.appendChild(input);
+                scoreRow.appendChild(td);
+            }
+            
+            const totalScore = currentPlayer.scores.reduce((sum, s) => sum + (parseInt(s) || 0), 0);
+            const totalTd = document.createElement('td');
+            totalTd.innerHTML = `<strong>${totalScore}</strong>`;
+            scoreRow.appendChild(totalTd);
+            
+            const statsDiv = document.getElementById('playerStats');
+            const points = calculateSystem36Points(currentPlayer.scores);
+            
+            if (points > 0 || totalScore > 0) {
+                let handicap, handicapLabel;
+                
+                if (currentPlayer.officialHandicap !== null && currentPlayer.officialHandicap !== undefined) {
+                    handicap = Math.round(currentPlayer.officialHandicap);
+                    handicapLabel = `Handicap (Official)`;
+                } else {
+                    handicap = 36 - points;
+                    handicapLabel = `Handicap (System 36)`;
+                }
+                
+                const netScore = totalScore - handicap;
+                
+                let statsHTML = `
+                    <div class="stat-box">
+                        <div class="stat-label">Gross Score</div>
+                        <div class="stat-value">${totalScore}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">${handicapLabel}</div>
+                        <div class="stat-value">${handicap}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Net Score</div>
+                        <div class="stat-value">${netScore}</div>
+                    </div>
+                `;
+                
+                if (currentPlayer.officialHandicap === null || currentPlayer.officialHandicap === undefined) {
+                    statsHTML = `
+                        <div class="stat-box">
+                            <div class="stat-label">System 36 Points</div>
+                            <div class="stat-value">${points}</div>
+                        </div>
+                    ` + statsHTML;
+                }
+                
+                statsDiv.innerHTML = statsHTML;
+            } else {
+                statsDiv.innerHTML = '';
+            }
+        }
+
+        function renderResults() {
+            const section = document.getElementById('resultsSection');
+            const resultsBody = document.getElementById('resultsBody');
+            const tiebreakNote = document.getElementById('tiebreakNote');
+            
+            const results = calculateResults();
+            const hasScores = results.some(r => r.grossScore > 0);
+            
+            if (!hasScores || players.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            resultsBody.innerHTML = '';
+
+            // Check if any ties exist to show the note
+            const hasTies = results.some(r => r.isTied);
+            if (hasTies) {
+                tiebreakNote.classList.remove('hidden');
+            } else {
+                tiebreakNote.classList.add('hidden');
+            }
+            
+            results.forEach((player, index) => {
+                if (player.grossScore > 0) {
+                    const tr = document.createElement('tr');
+                    if (index === 0) tr.className = 'winner';
+
+                    // Highlight tied rows in amber
+                    if (player.isTied && index !== 0) {
+                        tr.style.background = 'linear-gradient(135deg, #fff8e1 0%, #ffe082 100%)';
+                    }
+
+                    // Result cell content
+                    let resultText = '';
+                    if (player.tiebreakReason === 'Dead heat') {
+                        resultText = '🤝 Dead Heat';
+                    } else if (player.tiebreakReason.startsWith('Won on')) {
+                        resultText = `✅ ${player.tiebreakReason}`;
+                    } else if (player.tiebreakReason.startsWith('Lost on')) {
+                        resultText = `❌ ${player.tiebreakReason}`;
+                    }
+
+                    // Handicap type display
+                    const hcpTypeIcon = player.handicapType === 'Official' ? '⭐' : 'S36';
+                    
+                    tr.innerHTML = `
+                        <td>${index === 0 ? '<span class="trophy">🏆</span>' : ''}${index + 1}${player.isTied ? ' <span style="color:#ff9800;font-size:0.8em;">TIE</span>' : ''}</td>
+                        <td><strong>${player.name}</strong></td>
+                        <td>${player.grossScore}</td>
+                        <td>${player.scoreToPar > 0 ? '+' : ''}${player.scoreToPar}</td>
+                        <td>${player.system36Points}</td>
+                        <td>${player.handicap}</td>
+                        <td style="font-size: 0.85em;">${hcpTypeIcon}</td>
+                        <td><strong>${player.netScore}</strong></td>
+                        <td style="color: #1e3c72; font-weight: ${player.isTied ? 'bold' : 'normal'}">${player.back9Points}</td>
+                        <td style="color: #1e3c72; font-weight: ${player.isTied ? 'bold' : 'normal'}">${player.last6Points}</td>
+                        <td style="color: #1e3c72; font-weight: ${player.isTied ? 'bold' : 'normal'}">${player.last3Points}</td>
+                        <td style="font-size: 0.85em; color: #555;">${resultText}</td>
+                    `;
+                    
+                    resultsBody.appendChild(tr);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

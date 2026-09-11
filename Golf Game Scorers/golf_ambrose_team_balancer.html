@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Golf Ambrose Team Balancer</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background: #f4f6f8;
+        color: #222;
+    }
+    h1 {
+        margin-bottom: 10px;
+    }
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+    input[type="text"], input[type="number"] {
+        width: 95%;
+        padding: 6px;
+    }
+    button {
+        padding: 10px 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .primary {
+        background: #2d7d46;
+        color: white;
+    }
+    .secondary {
+        background: #dfe6ec;
+    }
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+    }
+    .team {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .avg {
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    .fairness {
+        margin-top: 15px;
+        font-size: 16px;
+    }
+</style>
+</head>
+<body>
+
+<h1>Golf Ambrose / Scramble Team Balancer</h1>
+<p>Enter 12 players and their handicaps. The app will generate 3 balanced teams of 4 players.</p>
+
+<div class="card">
+    <table id="playerTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Player Name</th>
+                <th>Handicap</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <br/>
+    <button class="primary" onclick="generateTeams()">Generate Fair Teams</button>
+    <button class="secondary" onclick="fillExample()">Load Example</button>
+</div>
+
+<div id="results"></div>
+
+<script>
+const tbody = document.querySelector("#playerTable tbody");
+
+for (let i = 1; i <= 12; i++) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${i}</td>
+        <td><input type="text" id="name${i}" placeholder="Player ${i}"></td>
+        <td><input type="number" id="hcp${i}" min="0" max="54" step="1"></td>
+    `;
+    tbody.appendChild(row);
+}
+
+function fillExample() {
+    const sample = [
+        ["Dave", 2],
+        ["John", 5],
+        ["Mike", 8],
+        ["Chris", 10],
+        ["Paul", 12],
+        ["Steve", 14],
+        ["Ben", 16],
+        ["Tom", 18],
+        ["Alex", 20],
+        ["Luke", 22],
+        ["Ryan", 25],
+        ["Matt", 28]
+    ];
+
+    sample.forEach((p, idx) => {
+        document.getElementById(`name${idx+1}`).value = p[0];
+        document.getElementById(`hcp${idx+1}`).value = p[1];
+    });
+}
+
+function generateTeams() {
+    let players = [];
+
+    for (let i = 1; i <= 12; i++) {
+        const name = document.getElementById(`name${i}`).value.trim();
+        const hcp = parseFloat(document.getElementById(`hcp${i}`).value);
+
+        if (!name || isNaN(hcp)) {
+            alert("Please complete all player names and handicaps.");
+            return;
+        }
+
+        players.push({ name, hcp });
+    }
+
+    // Sort by handicap (best players first)
+    players.sort((a, b) => a.hcp - b.hcp);
+
+    // Snake draft balancing system
+    const teams = [[], [], []];
+    const teamTotals = [0, 0, 0];
+
+    let direction = 1;
+    let index = 0;
+
+    for (let i = 0; i < players.length; i++) {
+        teams[index].push(players[i]);
+        teamTotals[index] += players[i].hcp;
+
+        if (direction === 1) {
+            if (index === 2) {
+                direction = -1;
+            } else {
+                index++;
+            }
+        } else {
+            if (index === 0) {
+                direction = 1;
+            } else {
+                index--;
+            }
+        }
+    }
+
+    renderTeams(teams, teamTotals);
+}
+
+function renderTeams(teams, totals) {
+    const results = document.getElementById("results");
+
+    const averages = totals.map(t => (t / 4).toFixed(1));
+    const maxAvg = Math.max(...averages);
+    const minAvg = Math.min(...averages);
+    const fairnessGap = (maxAvg - minAvg).toFixed(1);
+
+    let html = `
+        <div class="team-grid">
+    `;
+
+    teams.forEach((team, idx) => {
+        html += `
+            <div class="team">
+                <h2>Team ${idx + 1}</h2>
+                <table>
+                    <tr>
+                        <th>Player</th>
+                        <th>HCP</th>
+                    </tr>
+        `;
+
+        team.forEach(player => {
+            html += `
+                <tr>
+                    <td>${player.name}</td>
+                    <td>${player.hcp}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </table>
+                <div class="avg">Average Handicap: ${averages[idx]}</div>
+                <div>Total Handicap: ${totals[idx]}</div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+
+    html += `
+        <div class="card fairness">
+            <strong>Fairness Gap:</strong> ${fairnessGap}<br/>
+            Smaller numbers mean more balanced teams.
+        </div>
+    `;
+
+    results.innerHTML = html;
+}
+</script>
+
+</body>
+</html>
