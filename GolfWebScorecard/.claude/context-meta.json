@@ -1,0 +1,11 @@
+{
+  "projectName": "GolfWebScorecard",
+  "gitRepo": "https://github.com/drgreenland/golf-tools",
+  "createdAt": "2026-09-12",
+  "lastUpdated": "2026-09-12",
+  "iterationCount": 1,
+  "currentIteration": 1,
+  "iterations": [
+    { "number": 1, "date": "2026-09-12 09:00:00", "summary": "EzyGolfer Recovery multi-round tool: localStorage persistence, renderRounds, exportEzyGolferJSON, clearRounds, divider fix, Add Round button moved to bottom. 43 rounds recovered.", "filesChanged": 1, "commitSha": "33056d0" }
+  ]
+}
