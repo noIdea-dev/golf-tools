@@ -431,6 +431,7 @@
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-primary btn-lg" onclick="addRound()">+ Add Round</button>
       <button class="btn btn-primary btn-lg" onclick="exportEzyGolferJSON()">Export EzyGolfer Backup (.json)</button>
+      <button class="btn btn-danger" style="margin-left:auto;padding:8px 16px;font-size:0.88rem;border:1.5px solid var(--red);border-radius:7px" onclick="clearRounds()">Clear All Rounds</button>
     </div>
     <div id="recoveryMsg" class="export-msg"></div>
   </div>
@@ -1138,6 +1139,24 @@ function exportEzyGolferJSON() {
   const filename = `EzyGolfer-recovery-${new Date().toISOString().split('T')[0]}.json`;
   downloadFile(filename, JSON.stringify(data, null, 2), 'application/json');
   showRecoveryMsg(`Exported ${rounds.length} round${rounds.length === 1 ? '' : 's'} \u2192 ${filename}`);
+}
+
+function clearRounds() {
+  if (rounds.length === 0) {
+    showRecoveryMsg('Nothing to clear.', true);
+    return;
+  }
+  const exported = confirm(
+    `You have ${rounds.length} round${rounds.length === 1 ? '' : 's'} in the tool.\n\n` +
+    `Have you already exported and imported them into EzyGolfer?\n\n` +
+    `Click OK to clear all rounds, or Cancel to go back.`
+  );
+  if (!exported) return;
+  rounds = [];
+  _rid = 0;
+  saveRounds();
+  renderRounds();
+  showRecoveryMsg('All rounds cleared.');
 }
 
 function showRecoveryMsg(msg, isError) {
