@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Scorecard Builder</title>
+<style>
+  :root {
+    --green:       #2d5a27;
+    --green-mid:   #4a8c42;
+    --green-light: #e8f5e4;
+    --green-pale:  #f4faf2;
+    --sand:        #f7ead6;
+    --sand-dark:   #e8d5b5;
+    --blue-pale:   #eef3ff;
+    --border:      #c5dcc0;
+    --text:        #1a2e18;
+    --muted:       #6b8c67;
+    --red:         #c0392b;
+    --shadow:      rgba(45,90,39,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(160deg, #c8e6c0 0%, #e8f5e4 40%, #f4faf2 100%);
+    min-height: 100vh;
+    color: var(--text);
+    padding: 24px 16px 48px;
+  }
+
+  .container { max-width: 1300px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 {
+    font-size: 2rem;
+    color: var(--green);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  header p {
+    color: var(--muted);
+    margin-top: 4px;
+    font-size: 0.95rem;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 3px 12px var(--shadow);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .card-header h2 { margin-bottom: 0; }
+
+  /* Form */
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 130px;
+  }
+  .form-group label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+  }
+  .form-group input,
+  .form-group select {
+    padding: 8px 11px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.93rem;
+    color: var(--text);
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(74,140,66,0.15);
+  }
+  .form-group input[readonly] {
+    background: var(--green-pale);
+    color: var(--muted);
+  }
+
+  /* Team play checkbox */
+  .team-play-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+  .team-play-group label.top-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+  }
+  .team-play-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 11px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.93rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .team-play-check input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--green);
+    cursor: pointer;
+    padding: 0; border: none; border-radius: 0;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-mid); }
+  .btn-secondary { background: transparent; color: var(--green); border: 1.5px solid var(--green); }
+  .btn-secondary:hover { background: var(--green-light); }
+  .btn-danger { background: transparent; color: var(--red); border: none; padding: 4px 7px; font-size: 1rem; }
+  .btn-lg { padding: 11px 22px; font-size: 0.97rem; border-radius: 9px; }
+
+  /* Players */
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    background: var(--green-pale);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .player-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .player-row input { border: 1.5px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 0.9rem; }
+  .player-row input:focus { outline: none; border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(74,140,66,0.12); }
+  .player-name-input { flex: 1; min-width: 100px; }
+  .player-hcp-input  { width: 75px; flex-shrink: 0; text-align: center; }
+
+  /* Team toggle buttons */
+  .team-toggle { display: flex; gap: 3px; flex-shrink: 0; }
+  .team-btn {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1.5px solid var(--border);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: #fff;
+    color: var(--muted);
+    transition: all 0.12s;
+  }
+  .team-btn.t1 { background: #e74c3c; color: #fff; border-color: #e74c3c; }
+  .team-btn.t2 { background: #2980b9; color: #fff; border-color: #2980b9; }
+
+  /* Scorecard table */
+  .table-wrapper { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.87rem;
+    min-width: 780px;
+  }
+
+  thead th {
+    background: var(--green);
+    color: #fff;
+    padding: 8px 5px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  thead th.label-col { text-align: left; padding-left: 12px; min-width: 130px; }
+  thead th.sub-total { background: #1e4020; }
+
+  tbody tr:hover { background: #f8fef7; }
+  tbody td {
+    border: 1px solid var(--border);
+    text-align: center;
+    padding: 2px 2px;
+  }
+  tbody td.label-col {
+    text-align: left;
+    padding: 6px 10px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    min-width: 130px;
+  }
+  .par-row td  { background: var(--sand); }
+  .hcp-row td  { background: var(--blue-pale); }
+  .tot-row td  { background: var(--sand-dark); font-weight: 700; }
+
+  /* Team point rows */
+  .team1-row td { background: #fdecea; }
+  .team2-row td { background: #ddeeff; }
+  .team1-row td.label-col { color: #c0392b; border-left: 3px solid #e74c3c; }
+  .team2-row td.label-col { color: #1a6ea8; border-left: 3px solid #2980b9; }
+  .team1-row td.sub-total-cell { background: #f5c6c0; }
+  .team2-row td.sub-total-cell { background: #b8d9f5; }
+
+  .score-cell { padding: 2px 2px; }
+  .score-input {
+    width: 36px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 5px 2px;
+    color: var(--text);
+    -moz-appearance: textfield;
+  }
+  .score-input::-webkit-inner-spin-button,
+  .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .score-input:focus {
+    background: var(--green-light);
+    outline: 1px solid var(--green-mid);
+    border-radius: 4px;
+  }
+  .par-input, .hcp-input-cell {
+    width: 36px;
+    text-align: center;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 4px;
+    font-size: 0.88rem;
+    padding: 4px 2px;
+    -moz-appearance: textfield;
+  }
+  .par-input::-webkit-inner-spin-button,
+  .hcp-input-cell::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .par-input:focus, .hcp-input-cell:focus {
+    outline: none;
+    border-color: var(--green-mid);
+  }
+  .sub-total-cell {
+    font-weight: 700;
+    color: var(--green);
+    background: #f0f8ee;
+  }
+  .divider { border-left: 2.5px solid var(--green) !important; }
+
+  /* Export */
+  .export-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .export-msg {
+    margin-top: 10px;
+    font-size: 0.88rem;
+    color: var(--green-mid);
+    font-weight: 600;
+    min-height: 20px;
+  }
+  .note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* EzyGolfer Pro export button */
+  .btn-ezygolfer { background: #2B6B2B; color: #fff; }
+  .btn-ezygolfer:hover { background: #3a8c3a; }
+
+  /* Nassau status bar */
+  .nassau-status {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    background: var(--green-pale);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    margin-bottom: 10px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--green);
+  }
+  .nassau-status span { white-space: nowrap; }
+
+  /* Points display cell (Stableford) */
+  .pts-cell {
+    font-size: 0.78rem;
+    color: var(--green);
+    font-weight: 700;
+    min-width: 22px;
+    display: inline-block;
+  }
+
+  /* Skins / Wolf / Match rows */
+  .skin-row td  { background: #fff9e6; }
+  .wolf-row td  { background: #f0eeff; }
+  .partner-row td { background: #f7f7f7; }
+  .winner-row td { background: #e6f4ea; font-weight: 700; }
+  .stbl-row td  { background: #e8f5e4; font-weight: 700; }
+  .bbb-row td   { background: #fdf5e6; }
+
+  /* ── EzyGolfer multi-round recovery ── */
+  .round-card { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+  .round-card-header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--green-pale); border-bottom: 1px solid var(--border); }
+  .round-num { font-weight: 700; color: var(--green); font-size: 0.9rem; flex-shrink: 0; }
+  .round-card-body { padding: 14px; }
+  .round-meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .round-meta-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
+  .round-meta-group label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  .round-meta-group input, .round-meta-group select { padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.88rem; color: var(--text); background: #fff; }
+  .score-grid { overflow-x: auto; }
+  .score-grid table { min-width: 600px; font-size: 0.84rem; }
+  .score-grid table thead th { background: var(--green); color: #fff; padding: 5px 3px; font-size: 0.76rem; }
+  .score-grid table input { width: 30px; text-align: center; border: none; background: transparent; font-size: 0.85rem; font-weight: 500; padding: 4px 1px; -moz-appearance: textfield; }
+  .score-grid table input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .score-grid table input:focus { background: var(--green-light); outline: 1px solid var(--green-mid); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Golf Scorecard Builder</h1>
+    <p>Enter your round, then export as .md for your records or .csv to import into the app</p>
+  </header>
+
+  <!-- Round Setup -->
+  <div class="card">
+    <h2>Round Details</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Game Mode</label>
+        <select id="gameMode" onchange="onGameModeChange()">
+          <option value="strokePlay">Stroke Play</option>
+          <option value="stableford" selected>Stableford</option>
+          <option value="modifiedStableford">Modified Stableford</option>
+          <option value="matchPlay">Match Play</option>
+          <option value="nassau">Nassau</option>
+          <option value="skins">Skins</option>
+          <option value="scrambleStandard">Scramble (Standard)</option>
+          <option value="scrambleTexas">Texas Scramble</option>
+          <option value="scrambleFlorida">Florida Scramble</option>
+          <option value="vegas">Vegas</option>
+          <option value="wolf">Wolf</option>
+          <option value="bingoBangoBongo">Bingo Bango Bongo</option>
+        </select>
+      </div>
+      <div class="team-play-group" id="teamPlayGroup" style="display:none">
+        <label class="top-label">Format</label>
+        <label class="team-play-check">
+          <input type="checkbox" id="teamPlay" onchange="onTeamPlayChange()">
+          Team Play
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Course</label>
+        <select id="courseSelect" onchange="onCourseChange()">
+          <option value="Lombok Kosaido">Lombok Kosaido</option>
+          <option value="Custom">Custom (enter below)...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Course Name</label>
+        <input type="text" id="courseName" value="Lombok Kosaido" readonly>
+      </div>
+      <div class="form-group">
+        <label>Tee Colour</label>
+        <input type="text" id="tee" value="White" placeholder="e.g. White">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="roundDate">
+      </div>
+    </div>
+
+    <!-- Mode Settings panel -->
+    <div id="modeSettings" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:none">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:10px">Mode Settings</div>
+
+      <!-- Vegas -->
+      <div id="settings_vegas" style="display:none">
+        <div class="form-row">
+          <div class="form-group" style="max-width:140px">
+            <label>$ per point</label>
+            <input type="number" id="vegas_dollarsPerPoint" step="0.5" value="1" min="0">
+          </div>
+          <div class="form-group" style="flex:0 0 auto;justify-content:flex-end">
+            <label style="visibility:hidden">x</label>
+            <label class="team-play-check"><input type="checkbox" id="vegas_birdieFlip" checked> Birdie Flip</label>
+          </div>
+          <div class="form-group" style="flex:0 0 auto;justify-content:flex-end">
+            <label style="visibility:hidden">x</label>
+            <label class="team-play-check"><input type="checkbox" id="vegas_eagle99" checked> Eagle 99</label>
+          </div>
+          <div class="form-group" style="flex:0 0 auto;justify-content:flex-end">
+            <label style="visibility:hidden">x</label>
+            <label class="team-play-check"><input type="checkbox" id="vegas_carryover"> Carryover</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modified Stableford -->
+      <div id="settings_modifiedStableford" style="display:none">
+        <div class="form-row">
+          <div class="form-group" style="max-width:100px"><label>Albatross</label><input type="number" id="ms_albatross" value="5"></div>
+          <div class="form-group" style="max-width:100px"><label>Eagle</label><input type="number" id="ms_eagle" value="4"></div>
+          <div class="form-group" style="max-width:100px"><label>Birdie</label><input type="number" id="ms_birdie" value="3"></div>
+          <div class="form-group" style="max-width:100px"><label>Par</label><input type="number" id="ms_par" value="2"></div>
+          <div class="form-group" style="max-width:100px"><label>Bogey</label><input type="number" id="ms_bogey" value="1"></div>
+          <div class="form-group" style="max-width:100px"><label>Double+</label><input type="number" id="ms_doublePlus" value="0"></div>
+        </div>
+      </div>
+
+      <!-- Skins -->
+      <div id="settings_skins" style="display:none">
+        <div class="form-row">
+          <div class="form-group" style="max-width:140px">
+            <label>$ per skin</label>
+            <input type="number" id="skins_value" step="0.5" value="1" min="0">
+          </div>
+          <div class="form-group" style="flex:0 0 auto;justify-content:flex-end">
+            <label style="visibility:hidden">x</label>
+            <label class="team-play-check"><input type="checkbox" id="skins_carryover" checked> Carryover</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Texas Scramble -->
+      <div id="settings_scrambleTexas" style="display:none">
+        <div class="form-row">
+          <div class="form-group" style="max-width:180px">
+            <label>Min drives per player</label>
+            <input type="number" id="texas_minDrives" min="1" max="9" value="2">
+          </div>
+        </div>
+      </div>
+
+      <!-- Wolf -->
+      <div id="settings_wolf" style="display:none">
+        <div class="form-row">
+          <div class="form-group" style="flex:0 0 auto;justify-content:flex-end">
+            <label style="visibility:hidden">x</label>
+            <label class="team-play-check"><input type="checkbox" id="wolf_allowSolo" checked> Allow Solo</label>
+          </div>
+          <div class="form-group" style="max-width:140px">
+            <label>Solo Points</label>
+            <input type="number" id="wolf_soloPoints" value="3" min="1">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Players -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Players</h2>
+      <button class="btn btn-primary" onclick="addPlayer()">+ Add Player</button>
+    </div>
+    <div id="playerList"></div>
+    <p class="note">Handicap is the player's full course handicap. Used for Stableford point calculation in the export.<span id="teamPlayNote" style="display:none"> In Team Play, assign each player to T1 or T2 — the team takes the best Stableford points per hole.</span></p>
+  </div>
+
+  <!-- Scorecard -->
+  <div class="card">
+    <h2>Scorecard &mdash; Hole by Hole</h2>
+    <div class="table-wrapper" id="tableWrapper">
+      <p style="color:var(--muted);padding:20px 0">Add at least one player to see the scorecard.</p>
+    </div>
+  </div>
+
+  <!-- Export -->
+  <div class="card">
+    <h2>Export</h2>
+    <div class="export-row">
+      <button class="btn btn-primary btn-lg" onclick="exportMD()">Save Scorecard (.md)</button>
+      <button class="btn btn-secondary btn-lg" onclick="exportCSV()">Export Import File (.csv)</button>
+      <button class="btn btn-ezygolfer btn-lg" onclick="exportForEzyGolferPro()">&#128241; Export for EzyGolfer Pro</button>
+    </div>
+    <p class="note" style="margin-top:12px">
+      <strong>.md</strong> &mdash; formatted scorecard for your vault, includes embedded CSV block.<br>
+      <strong>.csv</strong> &mdash; raw import file for <code>import_round_csv.py</code> (Stableford app).
+    </p>
+    <div id="exportMsg" class="export-msg"></div>
+  </div>
+
+  <!-- EzyGolfer Multi-Round Recovery -->
+  <div class="card" style="border-top:3px solid var(--green)">
+    <div class="card-header">
+      <h2>EzyGolfer Recovery &mdash; Multiple Rounds</h2>
+    </div>
+    <p class="note" style="margin-bottom:14px">
+      Enter multiple single-player rounds and export as an EzyGolfer backup JSON.
+      Import via <strong>Settings &rarr; Import Backup</strong> in EzyGolfer.
+      The course must already exist in EzyGolfer. Putts / FIR / GIR / penalties will all be zero &mdash; strokes only.
+    </p>
+    <div id="noRoundsMsg" style="color:var(--muted);padding:8px 0 4px;font-size:0.88rem">No rounds added yet. Click "+ Add Round" to begin.</div>
+    <div id="roundList"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary btn-lg" onclick="addRound()">+ Add Round</button>
+      <button class="btn btn-primary btn-lg" onclick="exportEzyGolferJSON()">Export EzyGolfer Backup (.json)</button>
+      <button class="btn btn-danger" style="margin-left:auto;padding:8px 16px;font-size:0.88rem;border:1.5px solid var(--red);border-radius:7px" onclick="clearRounds()">Clear All Rounds</button>
+    </div>
+    <div id="recoveryMsg" class="export-msg"></div>
+  </div>
+
+</div>
+<script>
+// ─── Course Data ────────────────────────────────────────────────────────────
+
+const COURSES = {
+  'Lombok Kosaido': {
+    par:    [4,3,5,4,4,5,3,4,4, 4,4,5,3,4,5,3,4,4],
+    hcp:    [14,18,2,12,8,10,16,6,4, 11,7,1,15,5,3,17,13,9],
+    tee:    'White',
+    locked: true
+  },
+  'Custom': {
+    par:    Array(18).fill(''),
+    hcp:    Array(18).fill(''),
+    tee:    '',
+    locked: false
+  }
+};
+
+const PLAYER_COLORS = ['#e74c3c','#2980b9','#f39c12','#8e44ad','#16a085','#d35400','#c0392b','#27ae60'];
+
+// ─── State ──────────────────────────────────────────────────────────────────
+
+let players    = [];
+let curPar     = [...COURSES['Lombok Kosaido'].par];
+let curHcp     = [...COURSES['Lombok Kosaido'].hcp];
+let isLocked   = true;
+let isTeamPlay = false;
+let _uid       = 0;
+
+function uid() { return 'p' + (++_uid); }
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+
+function init() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('roundDate').value = today;
+  addPlayer('', '');
+  addPlayer('', '');
+  onGameModeChange();  // sets team-play visibility & mode settings panel
+}
+
+// ─── Game Mode Change ────────────────────────────────────────────────────────
+
+const TEAM_MODES = new Set(['vegas','scrambleStandard','scrambleTexas','scrambleFlorida']);
+
+function onGameModeChange() {
+  const gm = document.getElementById('gameMode').value;
+
+  // Team Play visibility
+  const showTeam = TEAM_MODES.has(gm);
+  document.getElementById('teamPlayGroup').style.display = showTeam ? '' : 'none';
+  if (!showTeam && isTeamPlay) {
+    document.getElementById('teamPlay').checked = false;
+    isTeamPlay = false;
+    document.getElementById('teamPlayNote').style.display = 'none';
+    renderPlayers();
+  }
+
+  // Mode Settings panel visibility
+  const modesWithSettings = new Set(['vegas','modifiedStableford','skins','scrambleTexas','wolf']);
+  document.getElementById('modeSettings').style.display = modesWithSettings.has(gm) ? '' : 'none';
+
+  // Show the right sub-panel
+  ['vegas','modifiedStableford','skins','scrambleTexas','wolf'].forEach(id => {
+    document.getElementById('settings_' + id).style.display = (id === gm) ? '' : 'none';
+  });
+
+  renderTable();
+}
+
+// ─── Team Play Toggle ────────────────────────────────────────────────────────
+
+function onTeamPlayChange() {
+  isTeamPlay = document.getElementById('teamPlay').checked;
+  document.getElementById('teamPlayNote').style.display = isTeamPlay ? 'inline' : 'none';
+  // Default: first half Team 1, second half Team 2
+  if (isTeamPlay) {
+    players.forEach((p, i) => { p.team = i < Math.ceil(players.length / 2) ? 0 : 1; });
+  }
+  renderPlayers();
+  renderTable();
+}
+
+function setPlayerTeam(id, team) {
+  const p = players.find(p => p.id === id);
+  if (!p) return;
+  p.team = team;
+  // Re-render just the toggle buttons for this player
+  const t1 = document.getElementById('tbtn_t1_' + id);
+  const t2 = document.getElementById('tbtn_t2_' + id);
+  if (t1) { t1.className = 'team-btn' + (team === 0 ? ' t1' : ''); }
+  if (t2) { t2.className = 'team-btn' + (team === 1 ? ' t2' : ''); }
+  refreshTeamRows();
+}
+
+// ─── Course Change ──────────────────────────────────────────────────────────
+
+function onCourseChange() {
+  const sel    = document.getElementById('courseSelect').value;
+  const course = COURSES[sel];
+
+  if (sel === 'Custom') {
+    document.getElementById('courseName').value    = '';
+    document.getElementById('courseName').readOnly = false;
+    document.getElementById('tee').value           = '';
+    curPar   = Array(18).fill('');
+    curHcp   = Array(18).fill('');
+    isLocked = false;
+  } else {
+    document.getElementById('courseName').value    = sel;
+    document.getElementById('courseName').readOnly = true;
+    document.getElementById('tee').value           = course.tee;
+    curPar   = [...course.par];
+    curHcp   = [...course.hcp];
+    isLocked = true;
+  }
+  renderTable();
+}
+
+// ─── Player Management ──────────────────────────────────────────────────────
+
+function addPlayer(name, hcp) {
+  const team = players.length < Math.ceil((players.length + 1) / 2) ? 0 : 1;
+  players.push({
+    id:     uid(),
+    name:   name === undefined ? '' : name,
+    hcp:    hcp  === undefined ? '' : hcp,
+    scores: Array(18).fill(''),
+    team:   0   // default Team 1; auto-assigned on team play toggle
+  });
+  renderPlayers();
+  renderTable();
+}
+
+function removePlayer(id) {
+  players = players.filter(p => p.id !== id);
+  renderPlayers();
+  renderTable();
+}
+
+function renderPlayers() {
+  document.getElementById('playerList').innerHTML = players.map((p, i) => `
+    <div class="player-row">
+      <div class="player-dot" style="background:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"></div>
+      <input class="player-name-input" type="text" placeholder="Player name"
+        value="${escHtml(p.name)}"
+        oninput="setPlayerField('${p.id}','name',this.value)">
+      <input class="player-hcp-input" type="number" placeholder="HCP" min="0" max="54"
+        value="${escHtml(String(p.hcp))}"
+        oninput="setPlayerField('${p.id}','hcp',this.value)">
+      ${isTeamPlay ? `
+        <div class="team-toggle">
+          <button id="tbtn_t1_${p.id}" class="team-btn${p.team === 0 ? ' t1' : ''}" onclick="setPlayerTeam('${p.id}',0)">T1</button>
+          <button id="tbtn_t2_${p.id}" class="team-btn${p.team === 1 ? ' t2' : ''}" onclick="setPlayerTeam('${p.id}',1)">T2</button>
+        </div>` : ''}
+      <button class="btn btn-danger" onclick="removePlayer('${p.id}')" title="Remove player">&#x2715;</button>
+    </div>
+  `).join('');
+}
+
+function setPlayerField(id, field, value) {
+  const p = players.find(p => p.id === id);
+  if (!p) return;
+  p[field] = value;
+  const el = document.getElementById('lbl_' + id);
+  if (el) el.textContent = playerLabel(p);
+  if (isTeamPlay && field === 'hcp') refreshTeamRows();
+}
+
+function playerLabel(p) {
+  return (p.name || 'Player') + (p.hcp !== '' ? ' (' + p.hcp + ')' : '');
+}
+
+// ─── Stableford Calculation ──────────────────────────────────────────────────
+
+function handicapStrokes(hcp, strokeIndex) {
+  const h = Math.round(+hcp);
+  if (h <= 0) return 0;
+  let s = 0;
+  if (strokeIndex <= Math.min(h, 18))           s++;
+  if (h > 18 && strokeIndex <= Math.min(h - 18, 18)) s++;
+  if (h > 36 && strokeIndex <= (h - 36))        s++;
+  return s;
+}
+
+function stablefordPts(strokes, par, hcpStrokes) {
+  if (!strokes || strokes <= 0) return 0;  // 0 = picked up
+  const net = +strokes - hcpStrokes;
+  return Math.max(0, 2 - (net - +par));
+}
+
+function playerHolePts(p, holeIdx) {
+  const strokes = p.scores[holeIdx];
+  if (strokes === '' || strokes === undefined) return null;  // not entered yet
+  const par = curPar[holeIdx];
+  const si  = curHcp[holeIdx];
+  if (par === '' || si === '') return null;
+  const hs = handicapStrokes(p.hcp || 0, +si);
+  return stablefordPts(+strokes, +par, hs);
+}
+
+function teamHolePts(team, holeIdx) {
+  const pts = players
+    .filter(p => p.team === team)
+    .map(p => playerHolePts(p, holeIdx))
+    .filter(v => v !== null);
+  if (pts.length === 0) return null;
+  return Math.max(...pts);
+}
+
+// ─── Score Updates (in-place, no full re-render) ─────────────────────────────
+
+function setScore(id, holeIdx, value) {
+  const p = players.find(p => p.id === id);
+  if (!p) return;
+  p.scores[holeIdx] = value;
+  refreshTotals(p);
+  if (isTeamPlay) refreshTeamRows();
+}
+
+function refreshTotals(p) {
+  const f9    = sumScores(p.scores.slice(0, 9));
+  const b9    = sumScores(p.scores.slice(9));
+  const hasF9 = p.scores.slice(0, 9).some(s => s !== '');
+  const hasB9 = p.scores.slice(9).some(s => s !== '');
+  const hasAny = hasF9 || hasB9;
+  setCell('f9_'  + p.id, hasF9  ? f9 : '');
+  setCell('b9_'  + p.id, hasB9  ? b9 : '');
+  setCell('tot_' + p.id, hasAny ? f9 + b9 : '');
+}
+
+function refreshTeamRows() {
+  [0, 1].forEach(team => {
+    let f9 = 0, b9 = 0, hasF9 = false, hasB9 = false;
+    for (let i = 0; i < 18; i++) {
+      const pts = teamHolePts(team, i);
+      const el  = document.getElementById(`tpt_${team}_${i}`);
+      if (el) el.textContent = pts !== null ? pts : '';
+      if (pts !== null) {
+        if (i < 9) { f9 += pts; hasF9 = true; }
+        else       { b9 += pts; hasB9 = true; }
+      }
+    }
+    setCell(`tpt_${team}_f9`,  hasF9        ? f9      : '');
+    setCell(`tpt_${team}_b9`,  hasB9        ? b9      : '');
+    setCell(`tpt_${team}_tot`, hasF9||hasB9 ? f9 + b9 : '');
+  });
+}
+
+function sumScores(arr) {
+  return arr.reduce((a, b) => a + (b === '' ? 0 : +b), 0);
+}
+
+function setCell(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val === '' ? '' : val;
+}
+
+// ─── Par / HCP cell update (for Custom course) ───────────────────────────────
+
+function setParCell(i, val) {
+  curPar[i] = val;
+  refreshParTotals();
+  if (isTeamPlay) refreshTeamRows();
+}
+function setHcpCell(i, val) {
+  curHcp[i] = val;
+  if (isTeamPlay) refreshTeamRows();
+}
+function refreshParTotals() {
+  const f9  = sumScores(curPar.slice(0, 9));
+  const b9  = sumScores(curPar.slice(9));
+  setCell('par_f9',  f9  || '');
+  setCell('par_b9',  b9  || '');
+  setCell('par_tot', f9 + b9 || '');
+}
+
+// ─── Mode helpers ─────────────────────────────────────────────────────────────
+
+function getGameMode() {
+  return document.getElementById('gameMode').value;
+}
+
+function modifiedStablefordPts(strokes, par, hcpStrokes) {
+  if (!strokes || strokes <= 0) return 0;
+  const net = +strokes - hcpStrokes;
+  const diff = net - +par;  // negative = better than par
+  const alb  = +document.getElementById('ms_albatross').value;
+  const eag  = +document.getElementById('ms_eagle').value;
+  const bir  = +document.getElementById('ms_birdie').value;
+  const pr   = +document.getElementById('ms_par').value;
+  const bog  = +document.getElementById('ms_bogey').value;
+  const dbl  = +document.getElementById('ms_doublePlus').value;
+  if (diff <= -3) return alb;
+  if (diff === -2) return eag;
+  if (diff === -1) return bir;
+  if (diff === 0)  return pr;
+  if (diff === 1)  return bog;
+  return dbl;
+}
+
+function playerHolePtsMode(p, holeIdx, gm) {
+  const strokes = p.scores[holeIdx];
+  if (strokes === '' || strokes === undefined) return null;
+  const par = curPar[holeIdx];
+  const si  = curHcp[holeIdx];
+  if (par === '' || si === '') return null;
+  const hs = handicapStrokes(p.hcp || 0, +si);
+  if (gm === 'modifiedStableford') return modifiedStablefordPts(+strokes, +par, hs);
+  return stablefordPts(+strokes, +par, hs);
+}
+
+// Net score for match play / nassau: lower is better
+function playerNetScore(p, holeIdx) {
+  const strokes = p.scores[holeIdx];
+  if (strokes === '' || strokes === undefined) return null;
+  const si = curHcp[holeIdx];
+  if (si === '') return null;
+  const hs = handicapStrokes(p.hcp || 0, +si);
+  return +strokes - hs;
+}
+
+// Returns winner initial (or "H" for halved) for match/nassau per hole, 2-player only
+function matchHoleWinner(holeIdx, p1, p2) {
+  const n1 = playerNetScore(p1, holeIdx);
+  const n2 = playerNetScore(p2, holeIdx);
+  if (n1 === null || n2 === null) return '';
+  if (n1 < n2) return (p1.name || 'P1').charAt(0);
+  if (n2 < n1) return (p2.name || 'P2').charAt(0);
+  return 'H';
+}
+
+// Build nassau running status string
+function nassauStatus() {
+  if (players.length < 2) return null;
+  const p1 = players[0], p2 = players[1];
+  const label1 = p1.name || 'P1';
+  const label2 = p2.name || 'P2';
+
+  function matchResult(holes) {
+    let diff = 0; // positive = p1 leads
+    for (const i of holes) {
+      const n1 = playerNetScore(p1, i);
+      const n2 = playerNetScore(p2, i);
+      if (n1 === null || n2 === null) continue;
+      if (n1 < n2) diff++;
+      else if (n2 < n1) diff--;
+    }
+    if (diff === 0) return 'All Square';
+    const leader = diff > 0 ? label1 : label2;
+    return `${leader} ${Math.abs(diff)} UP`;
+  }
+
+  const f9    = matchResult([0,1,2,3,4,5,6,7,8]);
+  const b9    = matchResult([9,10,11,12,13,14,15,16,17]);
+  const total = matchResult([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]);
+  return { f9, b9, total };
+}
+
+// Skins: per-hole winner or carry. Returns array of {winner, carry}
+function calcSkins() {
+  const result = [];
+  let carry = 0;
+  for (let i = 0; i < 18; i++) {
+    const scores = players.map(p => {
+      const s = p.scores[i];
+      return s === '' ? null : +s;
+    });
+    if (scores.some(s => s === null)) { result.push({ winner: '', carry }); carry++; continue; }
+    const min = Math.min(...scores);
+    const winners = scores.filter(s => s === min).length;
+    if (winners === 1) {
+      const idx = scores.indexOf(min);
+      result.push({ winner: (players[idx].name || 'P' + (idx+1)).charAt(0), carry });
+      carry = 0;
+    } else {
+      result.push({ winner: '—', carry });
+      carry++;
+    }
+  }
+  return result;
+}
+
+// Wolf rotation: hole i → player index (0-based), cycling through players
+function wolfPlayerForHole(holeIdx) {
+  if (players.length === 0) return null;
+  return players[holeIdx % players.length];
+}
+
+// ─── Full Table Render (on structure change) ─────────────────────────────────
+
+function renderTable() {
+  const gm = getGameMode();
+
+  if (players.length === 0) {
+    document.getElementById('tableWrapper').innerHTML =
+      '<p style="color:var(--muted);padding:20px 0">Add at least one player to see the scorecard.</p>';
+    return;
+  }
+
+  // Nassau status bar above table
+  let pre = '';
+  if (gm === 'nassau' && players.length >= 2) {
+    const ns = nassauStatus();
+    pre = `<div class="nassau-status">` +
+      `<span><strong>F9:</strong> ${ns.f9}</span>` +
+      `<span><strong>B9:</strong> ${ns.b9}</span>` +
+      `<span><strong>Overall:</strong> ${ns.total}</span>` +
+      `</div>`;
+  }
+
+  let h = '<table><thead><tr>';
+  h += '<th class="label-col">Hole</th>';
+  for (let i = 0; i < 18; i++) {
+    h += `<th${i === 8 ? ' class="divider"' : ''}>${i + 1}</th>`;
+  }
+  h += '<th class="sub-total">F9</th><th class="sub-total">B9</th><th class="sub-total">TOT</th>';
+  h += '</tr></thead><tbody>';
+
+  // PAR row
+  h += '<tr class="par-row">';
+  h += '<td class="label-col">PAR</td>';
+  for (let i = 0; i < 18; i++) {
+    if (isLocked) {
+      h += `<td${i === 8 ? ' class="divider"' : ''}>${curPar[i]}</td>`;
+    } else {
+      h += `<td${i === 8 ? ' class="divider"' : ''}>
+        <input class="par-input" type="number" min="3" max="6" value="${curPar[i]}"
+          oninput="setParCell(${i},this.value)">
+      </td>`;
+    }
+  }
+  const f9par  = sumScores(curPar.slice(0, 9));
+  const b9par  = sumScores(curPar.slice(9));
+  h += `<td class="sub-total-cell" id="par_f9">${f9par || ''}</td>`;
+  h += `<td class="sub-total-cell" id="par_b9">${b9par || ''}</td>`;
+  h += `<td class="sub-total-cell" id="par_tot">${f9par + b9par || ''}</td>`;
+  h += '</tr>';
+
+  // HCP row
+  h += '<tr class="hcp-row">';
+  h += '<td class="label-col">HCP (SI)</td>';
+  for (let i = 0; i < 18; i++) {
+    if (isLocked) {
+      h += `<td${i === 8 ? ' class="divider"' : ''}>${curHcp[i]}</td>`;
+    } else {
+      h += `<td${i === 8 ? ' class="divider"' : ''}>
+        <input class="hcp-input-cell" type="number" min="1" max="18" value="${curHcp[i]}"
+          oninput="setHcpCell(${i},this.value)">
+      </td>`;
+    }
+  }
+  h += '<td></td><td></td><td></td>';
+  h += '</tr>';
+
+  // ── Wolf row (before player score rows) ──────────────────────────────────
+  if (gm === 'wolf') {
+    h += '<tr class="wolf-row">';
+    h += '<td class="label-col">Wolf</td>';
+    for (let i = 0; i < 18; i++) {
+      const wp = wolfPlayerForHole(i);
+      h += `<td${i === 8 ? ' class="divider"' : ''} style="font-size:0.78rem;font-weight:700;color:#5b4fcf">${wp ? escHtml((wp.name||'P'+(players.indexOf(wp)+1)).substring(0,6)) : ''}</td>`;
+    }
+    h += '<td></td><td></td><td></td></tr>';
+  }
+
+  // ── Bingo Bango Bongo: per-category select rows instead of score inputs ──
+  if (gm === 'bingoBangoBongo') {
+    const playerNames = players.map((p,i) => p.name || ('P'+(i+1)));
+    const opts = '<option value="">—</option>' + players.map((p,i) => `<option value="${i}">${escHtml(playerNames[i])}</option>`).join('');
+    ['Bingo','Bango','Bongo'].forEach((cat, ci) => {
+      h += `<tr class="bbb-row"><td class="label-col">${cat}</td>`;
+      for (let i = 0; i < 18; i++) {
+        h += `<td${i === 8 ? ' class="divider"' : ''} style="padding:1px">
+          <select style="width:56px;font-size:0.75rem;border:1px solid var(--border);border-radius:3px;padding:2px"
+            onchange="setBBB(${ci},${i},this.value)" id="bbb_${ci}_${i}">
+            ${opts}
+          </select></td>`;
+      }
+      // Totals per player as sub-cells (just label them)
+      h += '<td></td><td></td><td></td>';
+      h += '</tr>';
+    });
+    // BBB points summary row per player
+    players.forEach((p, pi) => {
+      const color = PLAYER_COLORS[pi % PLAYER_COLORS.length];
+      h += `<tr><td class="label-col" style="color:${color};border-left:3px solid ${color}">${escHtml(playerLabel(p))} BBB</td>`;
+      for (let i = 0; i < 18; i++) {
+        h += `<td id="bbb_pts_${pi}_${i}"${i === 8 ? ' class="divider"' : ''}></td>`;
+      }
+      h += `<td class="sub-total-cell" id="bbb_f9_${pi}"></td><td class="sub-total-cell" id="bbb_b9_${pi}"></td><td class="sub-total-cell" id="bbb_tot_${pi}"></td></tr>`;
+    });
+    h += '</tbody></table>';
+    document.getElementById('tableWrapper').innerHTML = pre + h;
+    return;
+  }
+
+  // ── Scramble modes: one score input per team ───────────────────────────────
+  const isScramble = gm === 'scrambleStandard' || gm === 'scrambleTexas' || gm === 'scrambleFlorida';
+  if (isScramble && isTeamPlay) {
+    [0, 1].forEach(team => {
+      const teamLabel = 'Team ' + (team + 1);
+      const teamColor = team === 0 ? '#e74c3c' : '#2980b9';
+      const teamClass = team === 0 ? 'team1-row' : 'team2-row';
+      h += `<tr class="${teamClass}">`;
+      h += `<td class="label-col" style="color:${teamColor};border-left:3px solid ${teamColor}">${teamLabel} Score</td>`;
+      for (let i = 0; i < 18; i++) {
+        // Use scores of first player assigned to this team as proxy
+        const tp = players.find(p => p.team === team);
+        const val = tp ? tp.scores[i] : '';
+        h += `<td class="score-cell${i === 8 ? ' divider' : ''}">
+          <input class="score-input" type="number" min="0" max="20"
+            value="${val}"
+            oninput="setTeamScore(${team},${i},this.value===''?'':+this.value)">
+        </td>`;
+      }
+      const tp   = players.find(p => p.team === team);
+      const f9t  = tp ? sumScores(tp.scores.slice(0,9)) : '';
+      const b9t  = tp ? sumScores(tp.scores.slice(9))   : '';
+      const hasF = tp ? tp.scores.slice(0,9).some(s=>s!=='') : false;
+      const hasB = tp ? tp.scores.slice(9).some(s=>s!=='') : false;
+      h += `<td class="sub-total-cell">${hasF?f9t:''}</td><td class="sub-total-cell">${hasB?b9t:''}</td><td class="sub-total-cell">${hasF||hasB?f9t+b9t:''}</td>`;
+      h += '</tr>';
+
+      // Texas: drive selection rows per team
+      if (gm === 'scrambleTexas') {
+        const teamPlayers = players.filter(p => p.team === team);
+        const drvOpts = '<option value="">—</option>' + teamPlayers.map((p,i) => `<option value="${i}">${escHtml(p.name||('P'+(i+1)))}</option>`).join('');
+        h += `<tr style="background:#fffbe6"><td class="label-col" style="font-size:0.8rem">Drive ${teamLabel}</td>`;
+        for (let i = 0; i < 18; i++) {
+          h += `<td${i === 8 ? ' class="divider"' : ''} style="padding:1px">
+            <select style="width:54px;font-size:0.72rem;border:1px solid var(--border);border-radius:3px;padding:2px" id="drv_${team}_${i}">${drvOpts}</select></td>`;
+        }
+        h += '<td></td><td></td><td></td></tr>';
+      }
+    });
+    h += '</tbody></table>';
+    document.getElementById('tableWrapper').innerHTML = pre + h;
+    return;
+  }
+
+  // ── Standard player score rows ─────────────────────────────────────────────
+  players.forEach((p, pi) => {
+    const color  = PLAYER_COLORS[pi % PLAYER_COLORS.length];
+    const f9     = sumScores(p.scores.slice(0, 9));
+    const b9     = sumScores(p.scores.slice(9));
+    const hasF9  = p.scores.slice(0, 9).some(s => s !== '');
+    const hasB9  = p.scores.slice(9).some(s => s !== '');
+    const hasAny = hasF9 || hasB9;
+    const showPts = gm === 'stableford' || gm === 'modifiedStableford';
+
+    h += '<tr>';
+    h += `<td class="label-col" id="lbl_${p.id}" style="color:${color};border-left:3px solid ${color}">${escHtml(playerLabel(p))}</td>`;
+    for (let i = 0; i < 18; i++) {
+      const pts = showPts ? playerHolePtsMode(p, i, gm) : null;
+      const ptsSpan = (showPts && pts !== null) ? `<span class="pts-cell">${pts}</span>` : '';
+      h += `<td class="score-cell${i === 8 ? ' divider' : ''}" style="${showPts?'padding:1px 2px':''}">
+        <input class="score-input" type="number" min="0" max="20"
+          value="${p.scores[i]}"
+          oninput="setScore('${p.id}',${i},this.value===''?'':+this.value)">
+        ${ptsSpan}
+      </td>`;
+    }
+    h += `<td class="sub-total-cell" id="f9_${p.id}">${hasF9  ? f9 : ''}</td>`;
+    h += `<td class="sub-total-cell" id="b9_${p.id}">${hasB9  ? b9 : ''}</td>`;
+    h += `<td class="sub-total-cell" id="tot_${p.id}">${hasAny ? f9 + b9 : ''}</td>`;
+    h += '</tr>';
+  });
+
+  // ── Stableford / Modified Stableford: STBL PTS summary row ────────────────
+  if (gm === 'stableford' || gm === 'modifiedStableford') {
+    h += '<tr class="stbl-row"><td class="label-col">STBL PTS</td>';
+    for (let i = 0; i < 18; i++) {
+      const cellPts = players.map(p => playerHolePtsMode(p, i, gm)).filter(v=>v!==null);
+      h += `<td${i === 8 ? ' class="divider"' : ''}>${cellPts.length ? cellPts.join('/') : ''}</td>`;
+    }
+    // per-player totals
+    const ptsTots = players.map(p => {
+      let f9=0,b9=0,hf=false,hb=false;
+      for(let i=0;i<18;i++){const pt=playerHolePtsMode(p,i,gm);if(pt!==null){if(i<9){f9+=pt;hf=true;}else{b9+=pt;hb=true;}}}
+      return {f9,b9,hf,hb};
+    });
+    // aggregate across players for sub-totals (show first player's for simplicity; multi-player: sum)
+    const af9  = ptsTots.reduce((a,t)=>a+t.f9,0);
+    const ab9  = ptsTots.reduce((a,t)=>a+t.b9,0);
+    const ahf  = ptsTots.some(t=>t.hf);
+    const ahb  = ptsTots.some(t=>t.hb);
+    h += `<td class="sub-total-cell">${ahf?af9:''}</td><td class="sub-total-cell">${ahb?ab9:''}</td><td class="sub-total-cell">${ahf||ahb?af9+ab9:''}</td>`;
+    h += '</tr>';
+  }
+
+  // ── Match Play / Nassau: Winner row ───────────────────────────────────────
+  if ((gm === 'matchPlay' || gm === 'nassau') && players.length >= 2) {
+    const p1 = players[0], p2 = players[1];
+    h += '<tr class="winner-row"><td class="label-col">Winner (net)</td>';
+    for (let i = 0; i < 18; i++) {
+      const w = matchHoleWinner(i, p1, p2);
+      h += `<td${i === 8 ? ' class="divider"' : ''}>${w}</td>`;
+    }
+    h += '<td></td><td></td><td></td></tr>';
+  }
+
+  // ── Skins: Skin row ───────────────────────────────────────────────────────
+  if (gm === 'skins') {
+    const skins = calcSkins();
+    h += '<tr class="skin-row"><td class="label-col">Skin</td>';
+    for (let i = 0; i < 18; i++) {
+      const sk = skins[i];
+      let display = sk.winner || '';
+      if (sk.carry > 0 && display) display += `(+${sk.carry})`;
+      h += `<td${i === 8 ? ' class="divider"' : ''}>${display}</td>`;
+    }
+    h += '<td></td><td></td><td></td></tr>';
+  }
+
+  // ── Wolf: Partner row ─────────────────────────────────────────────────────
+  if (gm === 'wolf') {
+    const playerOpts = players.map((p,i) => `<option value="${i}">${escHtml(p.name||('P'+(i+1)))}</option>`).join('');
+    h += '<tr class="partner-row"><td class="label-col">Partner</td>';
+    for (let i = 0; i < 18; i++) {
+      h += `<td${i === 8 ? ' class="divider"' : ''} style="padding:1px">
+        <select style="width:60px;font-size:0.72rem;border:1px solid var(--border);border-radius:3px;padding:2px" id="wolf_partner_${i}">
+          <option value="">—</option>
+          ${playerOpts}
+          <option value="solo">Solo</option>
+        </select></td>`;
+    }
+    h += '<td></td><td></td><td></td></tr>';
+  }
+
+  // ── Team rows (Stableford best ball) — only in team play mode ─────────────
+  if (isTeamPlay) {
+    const teamColors = ['#e74c3c', '#2980b9'];
+    const teamClass  = ['team1-row', 'team2-row'];
+
+    [0, 1].forEach(team => {
+      h += `<tr class="${teamClass[team]}">`;
+      h += `<td class="label-col">Team ${team + 1} pts (best ball)</td>`;
+      for (let i = 0; i < 18; i++) {
+        const pts = teamHolePts(team, i);
+        h += `<td id="tpt_${team}_${i}"${i === 8 ? ' class="divider"' : ''}>${pts !== null ? pts : ''}</td>`;
+      }
+      h += `<td class="sub-total-cell" id="tpt_${team}_f9"></td>`;
+      h += `<td class="sub-total-cell" id="tpt_${team}_b9"></td>`;
+      h += `<td class="sub-total-cell" id="tpt_${team}_tot"></td>`;
+      h += '</tr>';
+    });
+
+    // Populate team totals for any scores already entered
+    refreshTeamRows();
+  }
+
+  h += '</tbody></table>';
+  document.getElementById('tableWrapper').innerHTML = pre + h;
+}
+
+// ─── BBB state ────────────────────────────────────────────────────────────────
+
+// bbbSelections[cat][hole] = playerIndex or ''
+let bbbSelections = [Array(18).fill(''), Array(18).fill(''), Array(18).fill('')];
+
+function setBBB(cat, hole, val) {
+  bbbSelections[cat][hole] = val;
+  refreshBBBTotals();
+}
+
+function refreshBBBTotals() {
+  players.forEach((p, pi) => {
+    let f9=0,b9=0;
+    for (let i=0;i<18;i++) {
+      let pts = 0;
+      for (let c=0;c<3;c++) {
+        if (bbbSelections[c][i] !== '' && +bbbSelections[c][i] === pi) pts++;
+      }
+      const el = document.getElementById(`bbb_pts_${pi}_${i}`);
+      if (el) el.textContent = pts || '';
+      if (i < 9) f9 += pts; else b9 += pts;
+    }
+    setCell(`bbb_f9_${pi}`, f9 || '');
+    setCell(`bbb_b9_${pi}`, b9 || '');
+    setCell(`bbb_tot_${pi}`, f9+b9 || '');
+  });
+}
+
+// ─── Scramble team score helper ───────────────────────────────────────────────
+
+function setTeamScore(team, holeIdx, value) {
+  // Apply to all players on that team
+  players.filter(p => p.team === team).forEach(p => {
+    p.scores[holeIdx] = value;
+  });
+}
+
+// ─── Export ─────────────────────────────────────────────────────────────────
+
+function getCourseName() {
+  const sel = document.getElementById('courseSelect').value;
+  return sel === 'Custom'
+    ? (document.getElementById('courseName').value || 'Custom Course')
+    : sel;
+}
+
+function buildCSV() {
+  const holes = Array.from({ length: 18 }, (_, i) => i + 1).join(',');
+  let csv = `Hole,,${holes}\n`;
+  csv += `PAR,,${curPar.join(',')}\n`;
+  csv += `HCP,,${curHcp.join(',')}\n`;
+  csv += `\n`;
+  players.forEach(p => {
+    const scores = p.scores.map(s => s === '' ? 0 : s).join(',');
+    csv += `${p.name || 'Player'},${p.hcp || 0},${scores}\n`;
+  });
+  return csv;
+}
+
+function exportMD() {
+  const gameType   = document.getElementById('gameMode').value;
+  const courseName = getCourseName();
+  const tee        = document.getElementById('tee').value || 'Unknown';
+  const date       = document.getElementById('roundDate').value || 'Unknown';
+  const format     = isTeamPlay ? `${gameType} — Team Play` : gameType;
+
+  let md = `# ${format} Round — ${courseName}\n\n`;
+  md += `**Date:** ${date}  \n`;
+  md += `**Course:** ${courseName}  \n`;
+  md += `**Tee:** ${tee}  \n`;
+  md += `**Game:** ${format}  \n\n`;
+
+  md += `## Players\n\n`;
+  md += `| Player | Handicap${isTeamPlay ? ' | Team' : ''} |\n`;
+  md += `|--------|----------${isTeamPlay ? '|------' : ''}|\n`;
+  players.forEach(p => {
+    const teamCol = isTeamPlay ? ` | Team ${p.team + 1}` : '';
+    md += `| ${p.name || 'Unknown'} | ${p.hcp !== '' ? p.hcp : '-'}${teamCol} |\n`;
+  });
+  md += '\n';
+
+  md += `## Scorecard\n\n`;
+  const playerHeaders = players.map(p => `${p.name || 'Player'} (${p.hcp})`).join(' | ');
+  md += `| Hole | Par | HCP | ${playerHeaders} |\n`;
+  md += `|------|-----|-----|${players.map(() => '---').join('|')}|\n`;
+
+  for (let i = 0; i < 18; i++) {
+    const scores = players.map(p => p.scores[i] !== '' ? p.scores[i] : '-').join(' | ');
+    md += `| ${i + 1} | ${curPar[i]} | ${curHcp[i]} | ${scores} |\n`;
+    if (i === 8) {
+      const f9par    = sumScores(curPar.slice(0, 9));
+      const f9scores = players.map(p => {
+        const f = sumScores(p.scores.slice(0, 9));
+        return p.scores.slice(0, 9).some(s => s !== '') ? `**${f}**` : '-';
+      }).join(' | ');
+      md += `| **OUT** | **${f9par}** | | ${f9scores} |\n`;
+    }
+  }
+  const b9par     = sumScores(curPar.slice(9));
+  const totpar    = sumScores(curPar);
+  const b9scores  = players.map(p => {
+    const b = sumScores(p.scores.slice(9));
+    return p.scores.slice(9).some(s => s !== '') ? `**${b}**` : '-';
+  }).join(' | ');
+  const totscores = players.map(p => {
+    const t = sumScores(p.scores);
+    return p.scores.some(s => s !== '') ? `**${t}**` : '-';
+  }).join(' | ');
+  md += `| **IN**    | **${b9par}**  | | ${b9scores}  |\n`;
+  md += `| **TOTAL** | **${totpar}** | | ${totscores} |\n`;
+
+  // Team summary block
+  if (isTeamPlay) {
+    md += `\n## Team Results (Best Ball Stableford Points)\n\n`;
+    md += `| Team | Players | F9 | B9 | Total |\n`;
+    md += `|------|---------|----|----|-------|\n`;
+    [0, 1].forEach(team => {
+      const names = players.filter(p => p.team === team).map(p => p.name || 'Player').join(', ');
+      let f9 = 0, b9 = 0;
+      for (let i = 0; i < 18; i++) {
+        const pts = teamHolePts(team, i);
+        if (pts !== null) { if (i < 9) f9 += pts; else b9 += pts; }
+      }
+      md += `| Team ${team + 1} | ${names} | ${f9} | ${b9} | **${f9 + b9}** |\n`;
+    });
+  }
+
+  md += `\n---\n\n`;
+  md += `## CSV Import Data\n\n`;
+  md += `*Use with \`import_round_csv.py\` to import into the app:*\n\n`;
+  md += '```csv\n';
+  md += buildCSV();
+  md += '```\n';
+
+  const filename = `${courseName.replace(/\s+/g, '-')}-${date}-${gameType}${isTeamPlay ? '-Teams' : ''}.md`;
+  downloadFile(filename, md, 'text/markdown');
+  showMsg('Saved ' + filename);
+}
+
+function exportCSV() {
+  const gameType   = document.getElementById('gameMode').value;
+  const courseName = getCourseName();
+  const date       = document.getElementById('roundDate').value || 'unknown';
+  const filename   = `${courseName.replace(/\s+/g, '-')}-${date}-${gameType}.csv`;
+  downloadFile(filename, buildCSV(), 'text/csv');
+  showMsg('Saved ' + filename + ' — ready for import_round_csv.py');
+}
+
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function showMsg(msg) {
+  const el = document.getElementById('exportMsg');
+  el.textContent = '\u2713 ' + msg;
+  setTimeout(() => { if (el.textContent.startsWith('\u2713 ' + msg)) el.textContent = ''; }, 4000);
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ─── EzyGolfer Pro Export ─────────────────────────────────────────────────────
+
+function getGameSettings(gm) {
+  if (gm === 'vegas') {
+    return {
+      dollarsPerPoint:          +(document.getElementById('vegas_dollarsPerPoint').value) || 1,
+      birdieFlipEnabled:        document.getElementById('vegas_birdieFlip').checked,
+      eagleNinetyNineEnabled:   document.getElementById('vegas_eagle99').checked,
+      carryoverEnabled:         document.getElementById('vegas_carryover').checked
+    };
+  }
+  if (gm === 'modifiedStableford') {
+    return {
+      isModified:       true,
+      albatrossPoints:  +(document.getElementById('ms_albatross').value),
+      eaglePoints:      +(document.getElementById('ms_eagle').value),
+      birdiePoints:     +(document.getElementById('ms_birdie').value),
+      parPoints:        +(document.getElementById('ms_par').value),
+      bogeyPoints:      +(document.getElementById('ms_bogey').value),
+      doublePlusPoints: +(document.getElementById('ms_doublePlus').value),
+      isNetScoring:     true
+    };
+  }
+  if (gm === 'skins') {
+    return {
+      skinValue:        +(document.getElementById('skins_value').value) || 1,
+      carryoverEnabled: document.getElementById('skins_carryover').checked
+    };
+  }
+  if (gm === 'scrambleTexas') {
+    return { minDrives: +(document.getElementById('texas_minDrives').value) || 2 };
+  }
+  if (gm === 'wolf') {
+    return {
+      rotationOrder: players.map(p => p.name || ''),
+      allowSolo:     document.getElementById('wolf_allowSolo').checked,
+      soloPoints:    +(document.getElementById('wolf_soloPoints').value) || 3
+    };
+  }
+  return null;
+}
+
+function exportForEzyGolferPro() {
+  if (players.length === 0) {
+    showMsg('Add at least one player before exporting.');
+    return;
+  }
+
+  const gm         = getGameMode();
+  const courseKey  = document.getElementById('courseSelect').value;
+  const courseName = getCourseName();
+  const teeName    = document.getElementById('tee').value || 'White';
+  const dateVal    = document.getElementById('roundDate').value;
+  const now        = new Date().toISOString();
+  const roundDate  = dateVal ? new Date(dateVal + 'T08:00:00.000Z').toISOString() : now;
+
+  // Rating / slope
+  const courseRating = 72.0;
+  const slopeRating  = courseKey === 'Lombok Kosaido' ? 113 : 113;
+
+  const isTeamMode = TEAM_MODES.has(gm);
+
+  const holes = curPar.map((par, i) => ({
+    number:       i + 1,
+    par:          par === '' ? 4 : +par,
+    strokeIndex:  curHcp[i] === '' ? (i + 1) : +curHcp[i]
+  }));
+
+  const gameSettings = getGameSettings(gm);
+
+  const exportPlayers = players.map(p => ({
+    name:           p.name || 'Player',
+    handicapIndex:  p.hcp !== '' ? +p.hcp : 0,
+    teamNumber:     isTeamMode ? (p.team === 0 ? 1 : 2) : 0,
+    scores:         p.scores.map(s => s === '' ? 0 : +s)
+  }));
+
+  const payload = {
+    version:      2,
+    exportDate:   now,
+    gameMode:     gm,
+    courseName:   courseName,
+    teeName:      teeName,
+    courseRating: courseRating,
+    slopeRating:  slopeRating,
+    isTeamPlay:   isTeamMode,
+    holes:        holes,
+    gameSettings: gameSettings !== null ? JSON.stringify(gameSettings) : null,
+    rounds: [{
+      id:            null,
+      date:          roundDate,
+      players:       exportPlayers,
+      holeMetadata:  []
+    }]
+  };
+
+  const safeCourse = courseName.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-_]/g, '');
+  const safeDate   = (dateVal || now.split('T')[0]);
+  const filename   = `EzyGolferPro_${gm}_${safeCourse}_${safeDate}.json`;
+  downloadFile(filename, JSON.stringify(payload, null, 2), 'application/json');
+  showMsg('Exported ' + filename);
+}
+
+// ─── Multi-Round Recovery (EzyGolfer) ────────────────────────────────────────
+
+let rounds = [];
+let _rid   = 0;
+function rid() { return 'r' + (++_rid); }
+
+const STORAGE_KEY = 'ezygolfer_recovery_rounds';
+
+function saveRounds() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds)); } catch(e) {}
+}
+
+function loadRounds() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      rounds = JSON.parse(saved);
+      // Restore _rid to avoid id collisions
+      rounds.forEach(r => {
+        const n = parseInt(r.id.replace('r', ''), 10);
+        if (n > _rid) _rid = n;
+      });
+    }
+  } catch(e) { rounds = []; }
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+function addRound() {
+  const today = new Date().toISOString().split('T')[0];
+  rounds.push({ id: rid(), date: today, courseName: 'Lombok Kosaido', playerName: '', scores: Array(18).fill('') });
+  saveRounds();
+  renderRounds();
+}
+
+function removeRound(id) {
+  rounds = rounds.filter(r => r.id !== id);
+  saveRounds();
+  renderRounds();
+}
+
+function setRoundMeta(id, field, value) {
+  const r = rounds.find(r => r.id === id);
+  if (!r) return;
+  r[field] = value;
+  saveRounds();
+  const el = document.getElementById('rhdr_' + id);
+  if (el) el.textContent = roundLabel(r);
+}
+
+function onRoundCourseChange(id, key) {
+  const r = rounds.find(r => r.id === id);
+  if (!r) return;
+  r.courseName = key === 'Lombok Kosaido' ? 'Lombok Kosaido' : '';
+  saveRounds();
+  renderRounds();
+}
+
+function setRoundScore2(id, holeIdx, value) {
+  const r = rounds.find(r => r.id === id);
+  if (!r) return;
+  r.scores[holeIdx] = value;
+  const f9    = r.scores.slice(0, 9).reduce((a, b) => a + (+b || 0), 0);
+  const b9    = r.scores.slice(9).reduce((a, b) => a + (+b || 0), 0);
+  const hasF9 = r.scores.slice(0, 9).some(s => s !== '');
+  const hasB9 = r.scores.slice(9).some(s => s !== '');
+  const sc    = (eid, v) => { const e = document.getElementById(eid); if (e) e.textContent = v; };
+  sc('rf9_'  + id, hasF9         ? f9      : '');
+  sc('rb9_'  + id, hasB9         ? b9      : '');
+  sc('rtot_' + id, hasF9||hasB9  ? f9 + b9 : '');
+  saveRounds();
+}
+
+function roundLabel(r) {
+  return `${r.date || '(no date)'}  —  ${r.playerName || '(player)'}  —  ${r.courseName || '(course)'}`;
+}
+
+function renderRounds() {
+  document.getElementById('noRoundsMsg').style.display = rounds.length ? 'none' : '';
+  const lk = COURSES['Lombok Kosaido'];
+  document.getElementById('roundList').innerHTML = rounds.map((r, idx) => {
+    const isLK  = r.courseName === 'Lombok Kosaido';
+    const par   = isLK ? lk.par : null;
+    const f9Par = par ? par.slice(0, 9).reduce((a, b) => a + b, 0) : '';
+    const b9Par = par ? par.slice(9).reduce((a, b) => a + b, 0) : '';
+    const f9    = r.scores.slice(0, 9).reduce((a, b) => a + (+b || 0), 0);
+    const b9    = r.scores.slice(9).reduce((a, b) => a + (+b || 0), 0);
+    const hasF9 = r.scores.slice(0, 9).some(s => s !== '');
+    const hasB9 = r.scores.slice(9).some(s => s !== '');
+    return `
+    <div class="round-card">
+      <div class="round-card-header">
+        <span class="round-num">#${idx + 1}</span>
+        <span id="rhdr_${r.id}" style="flex:1;font-size:0.88rem">${escHtml(roundLabel(r))}</span>
+        <button class="btn btn-danger" onclick="removeRound('${r.id}')" title="Remove">&#x2715;</button>
+      </div>
+      <div class="round-card-body">
+        <div class="round-meta-row">
+          <div class="round-meta-group">
+            <label>Date</label>
+            <input type="date" value="${escHtml(r.date)}"
+              oninput="setRoundMeta('${r.id}','date',this.value)">
+          </div>
+          <div class="round-meta-group">
+            <label>Course</label>
+            <select onchange="onRoundCourseChange('${r.id}',this.value)">
+              <option value="Lombok Kosaido"${isLK ? ' selected' : ''}>Lombok Kosaido</option>
+              <option value="Other"${!isLK ? ' selected' : ''}>Other (enter below)</option>
+            </select>
+          </div>
+          ${!isLK ? `
+          <div class="round-meta-group">
+            <label>Course Name</label>
+            <input type="text" value="${escHtml(r.courseName)}" placeholder="Exact name in EzyGolfer"
+              oninput="setRoundMeta('${r.id}','courseName',this.value)">
+          </div>` : ''}
+          <div class="round-meta-group">
+            <label>Player Name</label>
+            <input type="text" value="${escHtml(r.playerName)}" placeholder="e.g. David"
+              oninput="setRoundMeta('${r.id}','playerName',this.value)">
+          </div>
+        </div>
+        <div class="score-grid">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:5px 8px;min-width:58px"></th>
+                ${Array.from({length: 18}, (_, i) =>
+                  `<th style="min-width:30px${i === 9 ? ';border-left:2.5px solid #7bc47a' : ''}">${i + 1}</th>`
+                ).join('')}
+                <th>F9</th><th>B9</th><th>TOT</th>
+              </tr>
+              ${par ? `
+              <tr class="par-row">
+                <td style="text-align:left;padding:3px 8px;font-weight:600">PAR</td>
+                ${par.map((p, i) =>
+                  `<td style="text-align:center${i === 9 ? ';border-left:2.5px solid #7bc47a' : ''}">${p}</td>`
+                ).join('')}
+                <td style="text-align:center;font-weight:700">${f9Par}</td>
+                <td style="text-align:center;font-weight:700">${b9Par}</td>
+                <td style="text-align:center;font-weight:700">${f9Par + b9Par}</td>
+              </tr>` : ''}
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align:left;padding:3px 8px;font-weight:600">Score</td>
+                ${r.scores.map((s, i) => `
+                  <td style="border:1px solid var(--border);padding:0${i === 9 ? ';border-left:2.5px solid #4a8c42' : ''}">
+                    <input type="number" min="0" max="15" value="${s}"
+                      oninput="setRoundScore2('${r.id}',${i},this.value===''?'':+this.value)">
+                  </td>`).join('')}
+                <td id="rf9_${r.id}"  style="text-align:center;font-weight:700;background:#f0f8ee;color:var(--green)">${hasF9 ? f9 : ''}</td>
+                <td id="rb9_${r.id}"  style="text-align:center;font-weight:700;background:#f0f8ee;color:var(--green)">${hasB9 ? b9 : ''}</td>
+                <td id="rtot_${r.id}" style="text-align:center;font-weight:700;background:#f0f8ee;color:var(--green)">${hasF9||hasB9 ? f9+b9 : ''}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportEzyGolferJSON() {
+  if (rounds.length === 0) {
+    showRecoveryMsg('No rounds to export — add at least one round first.', true);
+    return;
+  }
+  const data = {
+    courses: [],
+    rounds: rounds.map(r => {
+      const dateStr = r.date
+        ? new Date(r.date + 'T08:00:00.000Z').toISOString()
+        : new Date().toISOString();
+      return {
+        id:           generateUUID(),
+        courseName:   r.courseName || 'Lombok Kosaido',
+        teeName:      'White',
+        date:         dateStr,
+        isComplete:   true,
+        totalScore:   r.scores.reduce((a, b) => a + (+b || 0), 0),
+        scoreEntries: r.scores.map((s, i) => ({
+          holeNumber: i + 1,
+          strokes:    +s || 0,
+          putts:      0,
+          fir:        false,
+          gir:        false,
+          penalties:  0
+        }))
+      };
+    })
+  };
+  const filename = `EzyGolfer-recovery-${new Date().toISOString().split('T')[0]}.json`;
+  downloadFile(filename, JSON.stringify(data, null, 2), 'application/json');
+  showRecoveryMsg(`Exported ${rounds.length} round${rounds.length === 1 ? '' : 's'} \u2192 ${filename}`);
+}
+
+function clearRounds() {
+  if (rounds.length === 0) {
+    showRecoveryMsg('Nothing to clear.', true);
+    return;
+  }
+  const exported = confirm(
+    `You have ${rounds.length} round${rounds.length === 1 ? '' : 's'} in the tool.\n\n` +
+    `Have you already exported and imported them into EzyGolfer?\n\n` +
+    `Click OK to clear all rounds, or Cancel to go back.`
+  );
+  if (!exported) return;
+  rounds = [];
+  _rid = 0;
+  saveRounds();
+  renderRounds();
+  showRecoveryMsg('All rounds cleared.');
+}
+
+function showRecoveryMsg(msg, isError) {
+  const el = document.getElementById('recoveryMsg');
+  if (!el) return;
+  el.style.color = isError ? 'var(--red)' : 'var(--green-mid)';
+  el.textContent = (isError ? '\u26a0 ' : '\u2713 ') + msg;
+  setTimeout(() => { el.textContent = ''; }, 5000);
+}
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+
+init();
+loadRounds();
+renderRounds();
+</script>
+</body>
+</html>
